@@ -1,21 +1,19 @@
 #!/usr/bin/env node
-
+const dotenv = require('dotenv');
 const cdk = require('aws-cdk-lib');
-const { SpaSampleSiteStack } = require('../lib/spa-sample-site-stack');
+const { SpaSampleSiteStack } = require('../lib/stack');
+
+dotenv.config();
 
 const app = new cdk.App();
-new SpaSampleSiteStack(app, 'SpaSampleSiteStack', {
-  /* If you don't specify 'env', this stack will be environment-agnostic.
-   * Account/Region-dependent features and context lookups will not work,
-   * but a single synthesized template can be deployed anywhere. */
 
-  /* Uncomment the next line to specialize this stack for the AWS Account
-   * and Region that are implied by the current CLI configuration. */
-  // env: { account: process.env.CDK_DEFAULT_ACCOUNT, region: process.env.CDK_DEFAULT_REGION },
+const stage = process.env.AWS_STAGE;
+const id = `${stage}-${process.env.APP_NAME}`.toLowerCase();
 
-  /* Uncomment the next line if you know exactly what Account and Region you
-   * want to deploy the stack to. */
-  // env: { account: '123456789012', region: 'us-east-1' },
-
+new SpaSampleSiteStack(app, id, {
+  env: { 
+    account: process.env.CDK_DEFAULT_ACCOUNT, 
+    region: process.env.CDK_DEFAULT_REGION
+  },
   /* For more information, see https://docs.aws.amazon.com/cdk/latest/guide/environments.html */
 });

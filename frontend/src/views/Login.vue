@@ -1,0 +1,72 @@
+<template>
+  <div class="container">
+    <h2 class="text-center mb-4">ログイン</h2>
+    <form @submit.prevent="login" class="needs-validation">
+      <div class="mb-3">
+        <label for="email" class="form-label">メールアドレス</label>
+        <input type="email" id="email" v-model="email" class="form-control" required>
+      </div>
+      <div class="mb-3">
+        <label for="password" class="form-label">パスワード</label>
+        <input type="password" id="password" v-model="password" class="form-control" required>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block">ログイン</button>
+    </form>
+    <p class="mt-3 text-center">アカウントをお持ちでない方は <router-link to="/register">登録</router-link></p>
+    <div v-if="error" class="alert alert-danger mt-3" role="alert">
+      {{ error }}
+    </div>
+  </div>
+</template>
+
+<script>
+import { AuthenticationDetails, CognitoUser } from 'amazon-cognito-identity-js';
+import userPool from '../user-pool';
+import { mapMutations } from 'vuex';
+
+export default {
+  data() {
+    return {
+      email: '',
+      password: '',
+      error: '',
+    };
+  },
+  methods: {
+    ...mapMutations([
+      'setUser',
+    ]),
+    login() {
+      const authenticationData = {
+        Username: this.email,
+        Password: this.password,
+      };
+      const authenticationDetails = new AuthenticationDetails(authenticationData);
+
+      const userData = {
+        Username: this.email,
+        Pool: userPool
+      };
+      const cognitoUser = new CognitoUser(userData);
+
+      cognitoUser.authenticateUser(authenticationDetails, {
+        onSuccess: session => {
+          console.log('認証成功しました', session);
+          this.setUser(session);
+          this.$router.push({ path: 'post-management' });
+        },
+        onFailure: err => {
+          console.error('認証失敗しました', err);
+          this.error = '認証中にエラーが発生しました。再度お試しください。';
+        },
+        newPasswordRequired: (userAttributes, requiredAttributes) => {
+          console.log('新しいパスワードが必要です', userAttributes, requiredAttributes);
+          this.error = '新しいパスワードが必要です。';
+        }
+      });
+    },
+  }
+};
+</script>
+
+<style scoped></style>
