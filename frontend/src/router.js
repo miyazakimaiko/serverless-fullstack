@@ -1,12 +1,13 @@
 import { createRouter, createWebHashHistory } from 'vue-router';
 import store from '@/store';
 import userPool from '@/user-pool';
-import PostManagement from '@/views/PostManagement.vue';
 import Login from '@/views/Login.vue';
-import NotFound from '@/views/NotFound.vue';
 import UserRegistration from '@/views/UserRegistration.vue';
 import UserManagement from '@/views/UserManagement.vue';
+import PostManagement from '@/views/PostManagement.vue';
 import PasswordChange from '@/views/PasswordChange.vue';
+import TikTokAccountManagement from '@/views/TikTokAccountManagement.vue'
+import NotFound from '@/views/NotFound.vue';
 
 const redirectBasedOnuserRoles = (callback) => {
   if (store.getters.isAdmin) {
@@ -79,6 +80,16 @@ const router = createRouter({
       path: '/post-management',
       component: PostManagement,
       meta: { 
+        requiresAuth: true, 
+      },
+      beforeEnter: (to, from, next) => {
+        redirectTo404IfNotuserRoles(next)
+      }
+    },
+    {
+      path: '/tiktok-account-management',
+      component: TikTokAccountManagement,
+      meta: {
         requiresAuth: true, 
       },
       beforeEnter: (to, from, next) => {

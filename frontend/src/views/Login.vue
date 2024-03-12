@@ -37,21 +37,19 @@ export default {
       'setUser',
     ]),
     login() {
-      const authenticationData = {
+      const authenticationDetails = new AuthenticationDetails({
         Username: this.email,
         Password: this.password,
-      };
-      const authenticationDetails = new AuthenticationDetails(authenticationData);
+      });
 
-      const userData = {
+      const cognitoUser = new CognitoUser({
         Username: this.email,
         Pool: userPool
-      };
-      const cognitoUser = new CognitoUser(userData);
+      });
 
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: session => {
-          console.log('認証成功しました', session);
+          console.log('認証成功しました');
           this.setUser(session);
           this.$router.push({ path: 'post-management' });
         },

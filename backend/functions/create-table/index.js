@@ -1,6 +1,6 @@
 /**
- * このヘルパー関数は、指定されたデータベース内にテーブルを作成するためのものです。
- * 直接コンソールから呼び出して使えます。
+ * このヘルパー関数は指定されたデータベース内にテーブルを作成するためのものです。
+ * 直接AWSコンソールから呼び出して使えます。
  */
 
 const { Client } = require('pg');
@@ -17,12 +17,23 @@ exports.handler = async () => {
         id BIGSERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         caption TEXT,
+        extension VARCHAR(5) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         last_posted_at TIMESTAMP
       );
     `;
 
+    const createTokenTableQuery = `
+      CREATE TABLE IF NOT EXISTS accounts (
+        user_id VARCHAR(255) NOT NULL,
+        sns_name VARCHAR(10) NOT NULL,
+        account_id VARCHAR(255) NOT NULL,
+        encrypted_token TEXT NOT NULL
+      );
+    `;
+
     await pgClient.query(createTableQuery);
+    await pgClient.query(createTokenTableQuery);
 
     console.log('テーブルが作成されました')
   } catch (error) {

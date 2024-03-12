@@ -1,3 +1,8 @@
+/**
+ * Cognitoにユーザーを登録します。
+ * デフォルトでユーザーをUserグループに加えます。
+ */
+
 const { 
   CognitoIdentityProviderClient, 
   SignUpCommand, 

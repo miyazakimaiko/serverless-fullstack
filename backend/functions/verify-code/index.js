@@ -1,3 +1,7 @@
+/**
+ *　Cgnitoが送信した確認コードを検証します。
+ */
+
 const { 
   CognitoIdentityProviderClient, 
   AdminConfirmSignUpCommand,

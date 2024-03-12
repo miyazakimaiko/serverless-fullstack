@@ -1,15 +1,19 @@
+/**
+ *　Cognitoからユーザーを削除します。
+ */
+
 const { CognitoIdentityProviderClient, AdminDeleteUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
 const { headers } = require('../../utils/http-response');
 
 exports.handler = async (event) => {
   try {
-    const { username } = event.pathParameters;
+    const { userId } = event.pathParameters;
 
     const client = new CognitoIdentityProviderClient();
 
     const command = new AdminDeleteUserCommand({
       UserPoolId: process.env.USER_POOL_ID,
-      Username: username,
+      Username: userId,
     });
 
     await client.send(command);

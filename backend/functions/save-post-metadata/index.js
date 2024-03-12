@@ -1,24 +1,29 @@
+/**
+ *　データベースへユーザーの投稿メタデータを保存します。
+ */
+
 const { Client } = require('pg');
 const { headers } = require('../../utils/http-response');
 const { clientConfig } = require('../../utils/db-client');
 
-
 exports.handler = async (event) => {
   const pgClient = new Client(clientConfig);
   
-  const { userId, caption } = JSON.parse(event.body);
+  const { userId } = event.pathParameters;
+  const { caption, extension } = JSON.parse(event.body);
   
   try {
     await pgClient.connect();
 
     const insertQuery = `
-      INSERT INTO posts (user_id, caption)
-      VALUES ($1, $2)
+      INSERT INTO posts (user_id, caption, extension)
+      VALUES ($1, $2, $3)
       RETURNING id, created_at
     `;
     const result = await pgClient.query(insertQuery, [
       userId,
-      caption, 
+      caption,
+      extension,
     ]);
 
     return {
@@ -43,5 +48,5 @@ exports.handler = async (event) => {
   } finally {
     await pgClient.end();
   }
-};
+}
 

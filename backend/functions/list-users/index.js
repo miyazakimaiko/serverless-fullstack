@@ -1,3 +1,7 @@
+/**
+ *　Cognitoから、全てのユーザーを取得します。
+ */
+
 const { CognitoIdentityProviderClient, ListUsersCommand } = require('@aws-sdk/client-cognito-identity-provider');
 const { headers } = require('../../utils/http-response');
 
