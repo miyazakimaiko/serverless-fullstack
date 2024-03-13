@@ -13,7 +13,7 @@ exports.handler = async () => {
     await pgClient.connect();
 
     const createTableQuery = `
-      CREATE TABLE IF NOT EXISTS posts (
+      CREATE TABLE IF NOT EXISTS post (
         id BIGSERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
         caption TEXT,
@@ -23,17 +23,33 @@ exports.handler = async () => {
       );
     `;
 
-    const createTokenTableQuery = `
-      CREATE TABLE IF NOT EXISTS accounts (
+    const createTikTokAccountTableQuery = `
+      CREATE TABLE IF NOT EXISTS tiktok_account (
         user_id VARCHAR(255) NOT NULL,
-        sns_name VARCHAR(10) NOT NULL,
-        account_id VARCHAR(255) NOT NULL,
-        encrypted_token TEXT NOT NULL
+        tiktok_user_id VARCHAR(255),
+        client_key VARCHAR(255) NOT NULL,
+        encrypted_client_secret TEXT NOT NULL,
+        encrypted_access_token TEXT,
+        access_expired_at TIMESTAMP,
+        encrypted_refresh_token TEXT,
+        refresh_expired_at TIMESTAMP,
+        token_scope VARCHAR(255),
+        token_type VARCHAR(20),
       );
     `;
 
+    const createInstaAccountTableQuery = `
+    CREATE TABLE IF NOT EXISTS insta_account (
+      user_id VARCHAR(255) NOT NULL,
+      account_id VARCHAR(255) NOT NULL,
+      encrypted_access_token TEXT NOT NULL,
+      access_expired_at TIMESTAMP NOT NULL,
+    );
+  `;
+
     await pgClient.query(createTableQuery);
-    await pgClient.query(createTokenTableQuery);
+    await pgClient.query(createTikTokAccountTableQuery);
+    await pgClient.query(createInstaAccountTableQuery);
 
     console.log('テーブルが作成されました')
   } catch (error) {
