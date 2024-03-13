@@ -12,7 +12,7 @@
               <router-link to="/post-management" class="nav-link">投稿管理</router-link>
             </li>
             <li v-if="isUser" class="nav-item ms-1 me-1">
-              <router-link to="/tiktok-account-management" class="nav-link">TikTokアカウント管理</router-link>
+              <router-link to="/tiktok/account-management" class="nav-link">TikTokアカウント管理</router-link>
             </li>
             <li v-if="isAdmin" class="nav-item ms-1 me-1">
               <router-link to="/user-management" class="nav-link">ユーザー管理</router-link>
