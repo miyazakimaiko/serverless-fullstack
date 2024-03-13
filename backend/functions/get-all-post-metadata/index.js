@@ -16,7 +16,7 @@ exports.handler = async (event) => {
 
     const selectionQuery = `
       SELECT id, caption, extension, created_at, last_posted_at
-      FROM posts
+      FROM post
       WHERE user_id = $1
       ORDER BY created_at
     `;

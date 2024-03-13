@@ -16,7 +16,7 @@ exports.handler = async (event) => {
     await pgClient.connect();
 
     const insertQuery = `
-      INSERT INTO posts (user_id, caption, extension)
+      INSERT INTO post (user_id, caption, extension)
       VALUES ($1, $2, $3)
       RETURNING id, created_at
     `;

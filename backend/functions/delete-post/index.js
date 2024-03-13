@@ -21,7 +21,7 @@ exports.handler = async (event) => {
     // DBから削除
     const deletionQuery = `
       DELETE
-      FROM posts
+      FROM post
       WHERE user_id = $1
       AND id = $2
     `;
