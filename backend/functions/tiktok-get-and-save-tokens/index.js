@@ -1,5 +1,6 @@
 /**
- *　DBへユーザーのTikTokアカウントのクライアントキーとクライアントシークレットを保存します。
+ *　TikTokのクライアントキー、クライアントシークレット、そしてTikTokから渡された認証コードを元に
+ * アクセストークン、リフレッシュトークン等を取得し、DBにインサートします。
  */
 
 const { Client } = require('pg');
@@ -22,7 +23,7 @@ exports.handler = async (event) => {
       userId,
     })
 
-    const tokenMetadata = await fetchTikTokAccessTokenUrl({
+    const tokenMetadata = await fetchTikTokTokens({
       authorizationCode,
       clientKey,
       clientSecret,
@@ -34,20 +35,22 @@ exports.handler = async (event) => {
 
     console.log({tokenMetadata})
 
+    // TODO: ここでトークンをDBに保存
+
     return {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        message: 'TikTokアクセストークンが保存されました',
+        message: 'TikTokデータが保存されました',
       }),
     };
   } catch (error) {
-    console.error('TikTokアクセストークン保存失敗', error);
+    console.error('TikTokデータ保存失敗', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        message: 'TikTokアクセストークンの保存に失敗しました',
+        message: 'TikTokデータの保存に失敗しました',
         error: error.message,
       }),
     };
@@ -97,7 +100,7 @@ const getEncryptionKeyFromSsm = async () => {
   }
 }
 
-const fetchTikTokAccessTokenUrl = async ({ authorizationCode, clientKey, clientSecret }) => {
+const fetchTikTokTokens = async ({ authorizationCode, clientKey, clientSecret }) => {
   const url = 'https://open.tiktokapis.com/v2/oauth/token/';
 
   const requestBody = new URLSearchParams({
@@ -105,7 +108,7 @@ const fetchTikTokAccessTokenUrl = async ({ authorizationCode, clientKey, clientS
     'client_secret': clientSecret,
     'code': authorizationCode,
     'grant_type': 'authorization_code',
-    'redirect_uri': 'https://d32lvnv31xi4tj.cloudfront.net/tiktok-redirect',
+    'redirect_uri': 'https://d32lvnv31xi4tj.cloudfront.net/tiktok/redirect',
   });
 
   const requestOptions = {

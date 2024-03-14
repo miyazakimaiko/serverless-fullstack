@@ -51,7 +51,7 @@ export default {
         onSuccess: session => {
           console.log('認証成功しました');
           this.setUser(session);
-          this.$router.push({ path: 'post-management' });
+          this.$router.push({ path: 'posts' });
         },
         onFailure: err => {
           console.error('認証失敗しました', err);
