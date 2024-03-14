@@ -9,13 +9,16 @@
         <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
           <ul class="navbar-nav">
             <li v-if="isUser" class="nav-item ms-1 me-1">
-              <router-link to="/post-management" class="nav-link">投稿管理</router-link>
+              <router-link to="/posts" class="nav-link">投稿管理</router-link>
             </li>
             <li v-if="isUser" class="nav-item ms-1 me-1">
-              <router-link to="/tiktok/account-management" class="nav-link">TikTokアカウント管理</router-link>
+              <router-link to="/insta/account" class="nav-link">Instagramアカウント管理</router-link>
+            </li>
+            <li v-if="isUser" class="nav-item ms-1 me-1">
+              <router-link to="/tiktok/account" class="nav-link">TikTokアカウント管理</router-link>
             </li>
             <li v-if="isAdmin" class="nav-item ms-1 me-1">
-              <router-link to="/user-management" class="nav-link">ユーザー管理</router-link>
+              <router-link to="/users" class="nav-link">ユーザー管理</router-link>
             </li>
             <li v-if="isAdmin || isUser" class="nav-item ms-1 me-1">
               <router-link to="/change-password" class="nav-link">パスワード変更</router-link>
@@ -67,8 +70,8 @@ export default {
       if (cognitoUser) {
         cognitoUser.signOut();
       }
-      console.log('ログアウトしました')
       this.clearUser();
+      console.log('ログアウトしました')
       this.$router.push({ path: 'login' });
     },
     checkUser() {

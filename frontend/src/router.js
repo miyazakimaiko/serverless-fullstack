@@ -7,14 +7,15 @@ import UserManagement from '@/views/UserManagement.vue';
 import PostManagement from '@/views/PostManagement.vue';
 import PasswordChange from '@/views/PasswordChange.vue';
 import TikTokAccountManagement from '@/views/TikTokAccountManagement.vue';
+import InstaAccountManagement from '@/views/InstaAccountManagement.vue';
 import TikTokRedirect from '@/views/TikTokRedirect.vue';
 import NotFound from '@/views/NotFound.vue';
 
 const redirectBasedOnuserRoles = (callback) => {
   if (store.getters.isAdmin) {
-    callback('/user-management');
+    callback('/users');
   } else if (store.getters.isUser) {
-    callback('/post-management');
+    callback('/posts');
   } else {
     callback();
   }
@@ -68,7 +69,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/user-management',
+      path: '/users',
       component: UserManagement,
       meta: { 
         requiresAuth: true, 
@@ -78,7 +79,7 @@ const router = createRouter({
       }
     },
     {
-      path: '/post-management',
+      path: '/posts',
       component: PostManagement,
       meta: { 
         requiresAuth: true, 
@@ -88,7 +89,7 @@ const router = createRouter({
       }
     },
     {
-      path: '/tiktok/account-management',
+      path: '/tiktok/account',
       component: TikTokAccountManagement,
       meta: {
         requiresAuth: true, 
@@ -100,6 +101,16 @@ const router = createRouter({
     {
       path: '/tiktok/redirect',
       component: TikTokRedirect,
+      meta: {
+        requiresAuth: true, 
+      },
+      beforeEnter: (to, from, next) => {
+        redirectTo404IfNotuserRoles(next)
+      }
+    },
+    {
+      path: '/insta/account',
+      component: InstaAccountManagement,
       meta: {
         requiresAuth: true, 
       },
