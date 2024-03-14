@@ -1,5 +1,5 @@
 /**
- *　データベースへユーザーのTikTokアカウントのクライアントキーとクライアントシークレットを保存します。
+ *　ユーザーのTikTokクライアントキーとクライアントシークレットをDBにインサートします。
  */
 
 const { Client } = require('pg');
@@ -15,7 +15,7 @@ exports.handler = async (event) => {
     const body = JSON.parse(event.body);
 
     if (!body.clientKey || !body.clientSecret) {
-      throw new Error('Missing clientKey or clientSecret from the request body');
+      throw new Error('clientKeyまたはclientSecretがリクエストボディから見当たりません');
     }
     const { userId } = event.pathParameters;
 
@@ -26,15 +26,14 @@ exports.handler = async (event) => {
       key: encryptionKey,
     });
 
-    console.log({ encryptedClientSecret })
-
     await pgClient.connect();
 
     const insertQuery = `
-       INSERT INTO tiktok_account (user_id, client_key, encrypted_client_secret)
-       VALUES ($1, $2, $3)
-     `;
-    const result = await pgClient.query(insertQuery, [
+      INSERT INTO tiktok_account (user_id, client_key, encrypted_client_secret)
+      VALUES ($1, $2, $3)
+    `;
+
+    await pgClient.query(insertQuery, [
       userId,
       body.clientKey,
       encryptedClientSecret,
@@ -48,7 +47,7 @@ exports.handler = async (event) => {
       }),
     };
   } catch (error) {
-    console.error('SNSクライアントデータの保存に失敗しました', error);
+    console.error('SNSクライアントデータ保存失敗', error);
     return {
       statusCode: 500,
       headers,

@@ -20,8 +20,8 @@ exports.handler = async (event) => {
 
     const publishRes = await publishPostToInstagram({
       userId,
-      accountId: '', 
-      accessToken: '', 
+      accountId: '17841407853972694', 
+      accessToken: 'EAANfXOpZAIaUBOy0TQZAP8lfaYPZCEsc7PYnh80PdFkVx3ZC4vsuFmFzRvZAyz04e9j5kZCpIv3Tb0zkSMnW3jZB48mmTc2uo7Nez53djerP4Cf0c8wBSKIZCDqb6u73WWNf6PjV6oycEzaqLNadqbKkbbuwp32TVTbELyUj92SK0I3vLo5at94B301bSn0o1ugZD', 
       postMetadata: postToPublish,
     });
 

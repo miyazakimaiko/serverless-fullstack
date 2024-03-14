@@ -42,8 +42,7 @@ exports.handler = async () => {
     CREATE TABLE IF NOT EXISTS insta_account (
       user_id VARCHAR(255) NOT NULL,
       account_id VARCHAR(255) NOT NULL,
-      encrypted_access_token TEXT NOT NULL,
-      access_expired_at TIMESTAMP NOT NULL,
+      encrypted_access_token TEXT NOT NULL
     );
   `;
 
@@ -51,7 +50,7 @@ exports.handler = async () => {
     await pgClient.query(createTikTokAccountTableQuery);
     await pgClient.query(createInstaAccountTableQuery);
 
-    console.log('テーブルが作成されました')
+    return 'テーブルが作成されました';
   } catch (error) {
     console.error('テーブル作成失敗', error);
   } finally {
