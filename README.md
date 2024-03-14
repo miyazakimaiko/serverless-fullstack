@@ -1,30 +1,5 @@
 # <div id="top"></div>
 
-## 使用技術一覧
-
-<!-- シールド一覧 -->
-<!-- 該当するプロジェクトの中から任意のものを選ぶ-->
-<p style="display: inline">
-  <!-- フロントエンドのフレームワーク一覧 -->
-  <img src="https://img.shields.io/badge/-Node.js-000000.svg?logo=node.js&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-Next.js-000000.svg?logo=next.js&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-TailwindCSS-000000.svg?logo=tailwindcss&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB">
-  <!-- バックエンドのフレームワーク一覧 -->
-  <img src="https://img.shields.io/badge/-Django-092E20.svg?logo=django&style=for-the-badge">
-  <!-- バックエンドの言語一覧 -->
-  <img src="https://img.shields.io/badge/-Python-F2C63C.svg?logo=python&style=for-the-badge">
-  <!-- ミドルウェア一覧 -->
-  <img src="https://img.shields.io/badge/-Nginx-269539.svg?logo=nginx&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-MySQL-4479A1.svg?logo=mysql&style=for-the-badge&logoColor=white">
-  <img src="https://img.shields.io/badge/-Gunicorn-199848.svg?logo=gunicorn&style=for-the-badge&logoColor=white">
-  <!-- インフラ一覧 -->
-  <img src="https://img.shields.io/badge/-Docker-1488C6.svg?logo=docker&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-githubactions-FFFFFF.svg?logo=github-actions&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-Amazon%20aws-232F3E.svg?logo=amazon-aws&style=for-the-badge">
-  <img src="https://img.shields.io/badge/-terraform-20232A?style=for-the-badge&logo=terraform&logoColor=844EBA">
-</p>
-
 ## 目次
 
 1. [環境](#環境)
@@ -37,27 +12,24 @@
 
 | 言語・フレームワーク      | バージョン  |
 | --------------------- | ---------- |
-| PostgreSQL            | ^8.11.3    |
-| Node.js               | 16.17.0    |
 | Vue.js                | 18.2.0     |
+| Node.js               | 16.17.0    |
+| PostgreSQL            | ^8.11.3    |
 | CDK                   | 1.3.6      |
 
-| AWS サービス           | バージョン   |
+
+| 主な AWS サービス       | バージョン   |
 | --------------------- | ---------- |
 | Aurora PostgreSQL     |  16.1      |
 | S3                    |            |
-| Cognito (User Pool)   |            |
+| Cognito User Pool　　　|            |
 | API Gateway           |            |
 | Lambda                |            |
 
 
 その他のパッケージのバージョンは package.json を参照してください
 
-<p align="right">(<a href="#top">トップへ</a>)</p>
-
 ## ディレクトリ構成
-
-<!-- Treeコマンドを使ってディレクトリ構成を記載 -->
 
 ❯ tree -a -I "node_modules|.next|.git|.pytest_cache|static" -L 2
 .
@@ -101,40 +73,70 @@
 
 ## 開発環境構築
 
-
-CDKとNode.jsをお使いのマシンにインストールする必要があります。
-Dockerを使用しない前提のサーバーレススタックですので、開発環境はクラウドにデプロイされます。CDKコマンドを使用してテスト環境をデプロイしてください。
+CDK CLI と Node.js v18 以降をお使いのマシンにインストールする必要があります。
+Docker を使用しない前提のサーバーレススタックですので、開発環境は CDK コマンドを使用して AWS 上にデプロイすることとします。
 
 ### テスト環境のデプロイ方法
 
-.env ファイルを以下の環境変数例と[環境変数の一覧](#環境変数の一覧)を元に作成
+以下の3ステップで backend と frontend のデプロイが完了します。
+3つ目のステップは、初めてデプロイする際のみ必要です。2度目以降は行う必要がありません。
 
-.env
-MYSQL_ROOT_PASSWORD=root
-MYSQL_DATABASE=django-db
-MYSQL_USER=django
-MYSQL_PASSWORD=django
-MYSQL_HOST=db
-MYSQL_PORT=3306
-SECRET_KEY=django
-DJANGO_SETTINGS_MODULE=project.settings.local
+#### ステップ1
 
+ターミナルで frontend ディレクトリに移動し、以下のコマンドを実行してください。
 
-.env ファイルを作成後、以下のコマンドで開発環境をデプロイ
+```
+npm run build
+```
 
-npm run deploy:test
+#### ステップ2
+
+ルートフォルダにある .env ファイルを以下の環境変数例と[環境変数の一覧](#環境変数の一覧)を元に作成します。
+
+AWS_REGION=eu-west-1
+AWS_STAGE=dev
+AWS_PROFILE=dev
+APP_NAME=sls
+CDK_DEFAULT_ACCOUNT=1234567890
+CDK_DEFAULT_REGION=eu-west-1
+DB_USER=username
+DB_PASSWORD=alsejbfsdfjhaiweury
+DB_NAME=dbname
+
+.env ファイルを作成後、ルートディレクトリに移動し、以下のコマンドで開発環境をデプロイします。
+
+```
+npm run deploy:dev
+```
+
+このコマンドは、デプロイする AWS アカウントの認証情報が default として .aws/credentials に設定されていることを前提としています。
+認証情報が default 意外に保管されている場合は、それに応じて package.json ファイルの script -> deploy:dev -> --profile パラメータをを変更してください。
+
+アカウントの認証情報設定方法：https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/cli-configure-files.html#cli-configure-files-methods
+
+#### ステップ3
+
+ステップ2 完了後のコマンドアウトプットに含まれている vueappenv の値をすべてコピーし、frontend/.env に貼り付けてください。
+以下のような環境変数となります。
+
+VUE_APP_COGNITO_USER_POOL_ID=eu-west-1_123example
+VUE_APP_COGNITO_CLIENT_ID=example23rui3asldjfblasie
+VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/
+VUE_APP_MEDIA_BUCKET_URL=https://example-media-bucket.s3.eu-west-1.amazonaws.com
+VUE_APP_SITE_URL=https://example.cloudfront.net
+
+frontend/.env ファイルを作成後、ルートディレクトリから以下のコマンドで開発環境を再デプロイします。
+
+```
+cd frontend && npm run build
+cd .. && npm run deploy:dev
+
+```
 
 ### 動作確認
 
-デプロイが完了いたしましたら、アウトプットにS3バケットのURLが表示されます。
-そちらのURLにアクセスできるか確認
+デプロイが完了しましたら、アウトプットに含まれている VUE_APP_SITE_URL のURLにアクセスできるか確認します。
 フロントエンドにアクセスできたら成功です。
-
-### コンテナの停止
-
-以下のコマンドでコンテナを停止することができます
-
-make down
 
 ### 環境変数の一覧
 
@@ -180,10 +182,6 @@ make down
 | make apply          | Terraform の内容を適用                                                  | docker-compose -f infra/docker-compose.yml run --rm terraform apply                        |
 | make destroy        | Terraform で構成されたリソースを削除                                    | docker-compose -f infra/docker-compose.yml run --rm terraform destroy                      |
 
-### リモートデバッグの方法
-
-リモートデバッグ を使用する際は以下の url を参考に設定してください<br>
-[Django のコンテナへリモートデバッグしよう！](https://qiita.com/shun198/items/9e4fcb4479385217c323)
 
 ## トラブルシューティング
 
