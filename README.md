@@ -61,15 +61,15 @@ npm run build
 ルートフォルダにある .env ファイルを以下の環境変数例と[環境変数の一覧](#環境変数の一覧)を元に作成します。
 
 
-> AWS_REGION=eu-west-1
-> AWS_STAGE=dev
-> AWS_PROFILE=dev
-> APP_NAME=sls
-> CDK_DEFAULT_ACCOUNT=1234567890
-> CDK_DEFAULT_REGION=eu-west-1
-> DB_USER=username
-> DB_PASSWORD=alsejbfsdfjhaiweury
-> DB_NAME=dbname
+> AWS_REGION=eu-west-1  
+> AWS_STAGE=dev  
+> AWS_PROFILE=dev  
+> APP_NAME=sls  
+> CDK_DEFAULT_ACCOUNT=1234567890  
+> CDK_DEFAULT_REGION=eu-west-1  
+> DB_USER=username  
+> DB_PASSWORD=alsejbfsdfjhaiweury  
+> DB_NAME=dbname  
 
 .env ファイルを作成後、ルートディレクトリに移動し、以下のコマンドで開発環境をデプロイします。
 
@@ -93,11 +93,11 @@ npm run deploy:dev
 以下のような環境変数となります。
 
 
-> VUE_APP_COGNITO_USER_POOL_ID=eu-west-1_123example
-> VUE_APP_COGNITO_CLIENT_ID=example23rui3asldjfblasie
-> VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/
-> VUE_APP_MEDIA_BUCKET_URL=https://example-media-bucket.s3.eu-west-1.amazonaws.com
-> VUE_APP_SITE_URL=https://example.cloudfront.net
+> VUE_APP_COGNITO_USER_POOL_ID=eu-west-1_123example  
+> VUE_APP_COGNITO_CLIENT_ID=example23rui3asldjfblasie  
+> VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/  
+> VUE_APP_MEDIA_BUCKET_URL=https://example-media-bucket.s3.eu-west-1.amazonaws.com  
+> VUE_APP_SITE_URL=https://example.cloudfront.net  
 
 
 frontend/.env ファイルを作成後、ルートディレクトリから以下のコマンドで開発環境を再デプロイします。
