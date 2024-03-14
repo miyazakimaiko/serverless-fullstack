@@ -1,6 +1,6 @@
 <template>
   <div class="container">
-    <h2 class="text-center mb-4">TikTokアカウント管理</h2>
+    <h2 class="text-center mb-4">TikTok アカウント管理</h2>
     <div v-if="errorSave" class="alert alert-danger mt-3" role="alert">
       {{ errorSave }}
     </div>
@@ -8,9 +8,14 @@
       {{ saveSuccess }}
     </div>
 
-    <!-- Existing form for selecting and uploading media files -->
-    <form @submit.prevent="prooveBucketOwnership" class="needs-validation mb-4">
-      <p>URL properties のセクションにこのURLを追加する {{ mediaBucketUrl }}/{{ this.sessionUser?.idToken?.payload?.sub }}/</p>
+    <h3 class="mb-4">ステップ１：アプリの申請をする</h3>
+    <form @submit.prevent="proveBucketOwnership" class="needs-validationstart mb-4">
+      <ol class="text-start">
+        <li><a href="https://developers.tiktok.com/">https://developers.tiktok.com/</a>にログインし、アプリを作成します。</li>
+        <li>「 LoginKit」の「Web」セクションに次のURLを追加してください。<strong>{{ siteUrl }}/tiktok/redirect</strong></li>
+        <li>「URL properties」のセクションに次のURLを追加してください。 <strong>{{ mediaBucketUrl }}/{{ this.sessionUser?.idToken?.payload?.sub }}/</strong></li>
+        <li>「Verify Property」をクリックします。表示されたtxtファイルをダウンロードし、以下のフォームからダウンロードしたファイルを登録してください。</li>
+      </ol>
       <div class="mb-3">
         <label for="media" class="form-label">txtファイルを選択</label>
         <input type="file" id="media" ref="mediaInput" class="form-control-file" required>
@@ -20,8 +25,9 @@
       </button>
     </form>
 
-    <!-- New form for entering client key and client secret -->
+    <h3 class="mb-4">ステップ３：TikTokアカウントの認証をする</h3>
     <form @submit.prevent="handleTikTokAuth" class="needs-validation mb-4">
+      <p>「App details」のセクションに表示されているクライアントキーとクライアントシークレットを以下のフォームから登録してください。登録ボタンを押すと、TikTokのログイン画面に移行します。</p>
       <div class="mb-3">
         <label for="clientKey" class="form-label">クライアントキー</label>
         <input type="text" id="clientKey" v-model="clientKey" class="form-control" required :disabled="saving">
@@ -46,7 +52,8 @@ export default {
       errorSave: null,
       saveSuccess: null,
       saving: false,
-      mediaBucketUrl: process.env.VUE_APP_MEDIA_BUCKET_URL
+      mediaBucketUrl: process.env.VUE_APP_MEDIA_BUCKET_URL,
+      siteUrl: process.env.VUE_APP_SITE_URL,
     };
   },
   computed: {
@@ -98,7 +105,7 @@ export default {
       }
     },
 
-    async prooveBucketOwnership() {
+    async proveBucketOwnership() {
       this.clearMessages();
       this.saving = true;
 
