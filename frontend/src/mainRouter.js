@@ -1,7 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '@/store';
 import userPool from '@/user-pool';
-import Login from '@/views/Login.vue';
+import UserLogin from '@/views/UserLogin.vue';
 import UserRegistration from '@/views/UserRegistration.vue';
 import UserManagement from '@/views/UserManagement.vue';
 import PostManagement from '@/views/PostManagement.vue';
@@ -42,14 +42,14 @@ const router = createRouter({
   routes: [
     {
       path: '/',
-      component: Login,
+      component: UserLogin,
       beforeEnter: (to, from, next) => {
         redirectBasedOnuserRoles(next);
       }
     },
     {
       path: '/login',
-      component: Login,
+      component: UserLogin,
       beforeEnter: (to, from, next) => {
         redirectBasedOnuserRoles(next);
       }

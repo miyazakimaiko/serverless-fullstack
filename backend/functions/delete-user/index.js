@@ -1,5 +1,6 @@
 /**
  *　Cognitoからユーザーを削除します。
+ * TODO: ユーザーのeventRuleも削除する
  */
 
 const { CognitoIdentityProviderClient, AdminDeleteUserCommand } = require('@aws-sdk/client-cognito-identity-provider');
@@ -22,17 +23,18 @@ exports.handler = async (event) => {
       statusCode: 200,
       headers,
       body: JSON.stringify({
-        message: 'User deleted successfully',
+        message: 'ユーザーを削除しました',
       }),
     };
   } catch (error) {
-    console.error('Error deleting user:', error);
+    console.error('ユーザー削除失敗:', error);
     return {
       statusCode: 500,
       headers,
       body: JSON.stringify({
-        message: 'Error deleting user',
-        error: error.message,
+        message: 'ユーザーの削除に失敗しました',
+        // @ts-ignore
+        error: error.message || error,
       }),
     };
   }

@@ -5,7 +5,7 @@
     <div v-if="loadingUsers" class="text-center">Loading...</div>
 
     <div v-if="error" class="alert alert-danger mt-3">{{ error }}</div>
-    <div v-if="!error && deleteSuccess" class="alert alert-success mt-3">{{ deleteSuccess }}</div>
+    <div v-if="!error && deleteSuccessMsg" class="alert alert-success mt-3">{{ deleteSuccessMsg }}</div>
 
     <div v-if="users && users.length" class="row">
       <div v-for="user in users" :key="user.Username" class="mb-4">
@@ -19,13 +19,32 @@
               }}</li>
             <li class="list-group-item">
               <button
-                @click="deleteUser(user)"
+                @click="setUserToDelete(user)"
+                data-bs-toggle="modal" data-bs-target="#userDeletionModal"
                 :disabled="deletingUser || user.Username === sessionUser?.idToken?.payload?.sub"
                 class="btn btn-danger">
-                {{ deletingUser ? '削除中' : '削除' }}
+                削除
               </button>
             </li>
           </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal fade" id="userDeletionModal" tabindex="-1" aria-labelledby="userDeletionModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="userDeletionModalLabel">ユーザー削除</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          ユーザーID: {{ userToDelete ? getUserAttribute(userToDelete, 'sub') : '' }} を削除します。よろしいですか？
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">いいえ</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" @click="deleteUser()">はい</button>
         </div>
       </div>
     </div>
@@ -41,15 +60,16 @@ export default {
   data() {
     return {
       users: null,
+
       loadingUsers: false,
       creatingUser: false,
       deletingUser: false,
+      deleteSuccessMsg: null,
+
+      userToDelete: null,
+
       error: null,
-      deleteSuccess: null,
-      newUser: {
-        email: '',
-        password: ''
-      }
+
     };
   },
   mounted() {
@@ -64,7 +84,7 @@ export default {
     async getUsers() {
       this.loadingUsers = true;
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/users`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/users`;
         const response = await fetch(url, { method: 'GET' });
         const res = await response.json();
         this.users = res.users;
@@ -74,27 +94,36 @@ export default {
         this.error = 'ユーザーリスト取得に失敗しました。';
       }
     },
+
     getUserAttribute(user, attributeName) {
       const attribute = user.Attributes.find(attr => attr.Name === attributeName);
       return attribute ? attribute.Value : '';
     },
-    async deleteUser(user) {
+
+    setUserToDelete(user) {
+      this.userToDelete = user;
+    },
+
+    async deleteUser() {
+      const user = this.userToDelete;
+
       this.error = null;
-      this.deleteSuccess = null;
+      this.deleteSuccessMsg = null;
       this.deletingUser = true;
+
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${user.Username}`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${user.Username}`;
         const response = await fetch(url, {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
         });
         await response.json();
         this.error = null;
-        this.deleteSuccess = `ユーザーID: ${user.Username} を削除しました。`;
+        this.deleteSuccessMsg = `ユーザーID: ${user.Username} を削除しました`;
         this.getUsers();
       } catch (error) {
         console.error('削除失敗:', error);
-        this.error = '削除に失敗しました。';
+        this.error = '削除に失敗しました';
       } finally {
         this.deletingUser = false;
       }

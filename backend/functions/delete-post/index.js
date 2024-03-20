@@ -12,9 +12,9 @@ const mediaBucketName = process.env.MEDIA_BUCKET_NAME;
 exports.handler = async (event) => {
   const pgClient = new Client(clientConfig);
 
-  const { userId, postId } = event.pathParameters;
-
   try {
+    const { userId, postId } = event.pathParameters;
+
     await pgClient.connect();
     await pgClient.query('BEGIN');
 
@@ -70,7 +70,8 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         message: '投稿削除に失敗しました',
-        error: error.message,
+        // @ts-ignore
+        error: error.message || error,
       }),
     };
   } finally {
@@ -78,31 +79,28 @@ exports.handler = async (event) => {
   }
 };
 
-const getAllObjectsFromMediaBucket = async ({ client, userId, postId }) => {
-  const command = new ListObjectsV2Command({
-    Bucket: mediaBucketName,
-    Prefix: `${userId}/${postId}`,
-  });
-
+const getAllObjectsFromMediaBucket = async ({ client, userId, postId }) => {  
   try {
+    const command = new ListObjectsV2Command({
+      Bucket: mediaBucketName,
+      Prefix: `${userId}/${postId}`,
+    });
     return await client.send(command);
   } catch (error) {
-    console.log('オブジェクトキー取得に失敗しました', error);
+    console.error('オブジェクトキー取得失敗', error);
     throw error;
   }
 }
 
-
-const deleteObjectFromMediaBucket = async ({ client, key }) => {
-  const command = new DeleteObjectCommand({
-    Bucket: mediaBucketName,
-    Key: key,
-  });
-
+const deleteObjectFromMediaBucket = async ({ client, key }) => {  
   try {
+    const command = new DeleteObjectCommand({
+      Bucket: mediaBucketName,
+      Key: key,
+    });
     return await client.send(command);
   } catch (error) {
-    console.error('オブジェクト削除に失敗しました', error);
+    console.error('オブジェクト削除失敗', error);
     throw error;
   }
 }

@@ -4,29 +4,25 @@
  */
 
 const { Client } = require('pg');
-const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
+const { SSMClient } = require("@aws-sdk/client-ssm");
 const { headers } = require('../../utils/http-response');
 const { clientConfig } = require('../../utils/db-client');
 const { decryptText } = require('../../utils/encryption');
+const { getEncryptionKeyFromSsm } = require('../../utils/client-ssm');
 
 exports.handler = async (event) => {
   const pgClient = new Client(clientConfig);
+  const ssmClient = new SSMClient();
 
   try {
-    const { userId } = event.pathParameters;
     const authorizationCode = event.queryString.authorizationCode;
 
     await pgClient.connect();
 
-    const { clientKey, clientSecret } = await getTikTokClientKeys({ 
-      pgClient, 
-      userId,
-    })
-
     const tokenMetadata = await fetchTikTokTokens({
       authorizationCode,
-      clientKey,
-      clientSecret,
+      clientKey: process.env.TIKTOK_CLIENT_KEY,
+      clientSecret: process.env.TIKTOK_CLIENT_SECRET,
     });
 
     if (tokenMetadata.error) {
@@ -51,52 +47,12 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         message: 'TikTokデータの保存に失敗しました',
-        error: error.message,
+        // @ts-ignore
+        error: error.message || error,
       }),
     };
   } finally {
     await pgClient.end();
-  }
-}
-
-const getTikTokClientKeys = async ({ pgClient, userId }) => {
-  const encryptionKey = await getEncryptionKeyFromSsm();
-
-  const selectQuery = `
-    SELECT client_key, encrypted_client_secret
-    FROM tiktok_account
-    WHERE user_id = $1
-  `;
-  const response = await pgClient.query(selectQuery, [
-    userId,
-  ]);
-
-  const result = response.rows[0];
-
-  const decryptedClientSecret = decryptText({
-    text: result.encrypted_client_secret,
-    key: encryptionKey,
-  });
-
-  return {
-    clientKey: result.client_key,
-    clientSecret: decryptedClientSecret,
-  }
-}
-
-const getEncryptionKeyFromSsm = async () => {
-  const client = new SSMClient();
-  try {
-    const input = {
-      Name: process.env.SSM_ENCRYPTION_KEY_PARAMETER_NAME,
-    };
-    const command = new GetParameterCommand(input);
-    const response = await client.send(command);
-
-    return response.Parameter.Value;
-  } catch (error) {
-    console.log('暗号化キー取得失敗', error);
-    throw error;
   }
 }
 
@@ -108,7 +64,7 @@ const fetchTikTokTokens = async ({ authorizationCode, clientKey, clientSecret })
     'client_secret': clientSecret,
     'code': authorizationCode,
     'grant_type': 'authorization_code',
-    'redirect_uri': 'https://d32lvnv31xi4tj.cloudfront.net/tiktok/redirect',
+    'redirect_uri': process.env.TIKTOK_REDIRECT_URI || '',
   });
 
   const requestOptions = {

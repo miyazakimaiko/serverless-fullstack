@@ -30,7 +30,7 @@
         </div>
       </div>
     </div>
-    <div class="container-xl mt-4">
+    <div class="mt-4 mx-auto" style="max-width: 720px;">
       <router-view />
     </div>
   </div>
@@ -105,4 +105,7 @@ export default {
   color: #2c3e50;
 }
 
+.form-label {
+  font-weight: bold;
+}
 </style>

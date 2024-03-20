@@ -1,92 +1,98 @@
 /**
- *　データベースから指定のユーザーの投稿する一件のポストのデータを取得し、インスタとTikTokに投稿します。
- *  投稿順は登録日順です。
+ *　データベースから指定のユーザーの投稿する一件の投稿データを取得し、インスタとTikTokに投稿します。
  */
-
 const { Client } = require('pg');
-const crypto = require('crypto');
-const { clientConfig } = require('../../utils/db-client');
-const { publishPostToInstagram } = require('./publisher/instagram.js');
+const { SSMClient } = require('@aws-sdk/client-ssm');
+const { clientConfig } = require('../../utils/db-client.js');
+const { getEncryptionKeyFromSsm } = require('../../utils/client-ssm.js');
+const tokensUtils = require('./utils/tokens.js');
+const postsUtils = require('./utils/posts.js');
+const instaPublisher = require('./publishers/instagram.js');
+const tiktokPublisher = require('./publishers/tiktok.js');
+const { STATUS } = require('./utils/enums.js');
 
 exports.handler = async (event) => {
+  const ssmClient = new SSMClient();
+  const pgClient = new Client(clientConfig);
+  let userId;
+
   try {
-    const pgClient = new Client(clientConfig);
+    await pgClient.connect();
 
-    const userId = event.userId;
-    const postToPublish = await getPostMetadataToPublish({ 
-      pgClient, 
+    userId = event.userId;
+
+    const encryptionKey = await getEncryptionKeyFromSsm(ssmClient);
+
+    const instaTokens = await tokensUtils.getInstaTokens({
+      pgClient,
+      encryptionKey,
       userId,
     });
 
-    const publishRes = await publishPostToInstagram({
+    const tiktokTokens = await tokensUtils.getTikTokTokens({
+      pgClient,
+      encryptionKey,
       userId,
-      accountId: '17841407853972694', 
-      accessToken: 'EAANfXOpZAIaUBOy0TQZAP8lfaYPZCEsc7PYnh80PdFkVx3ZC4vsuFmFzRvZAyz04e9j5kZCpIv3Tb0zkSMnW3jZB48mmTc2uo7Nez53djerP4Cf0c8wBSKIZCDqb6u73WWNf6PjV6oycEzaqLNadqbKkbbuwp32TVTbELyUj92SK0I3vLo5at94B301bSn0o1ugZD', 
-      postMetadata: postToPublish,
     });
 
-    if (publishRes.id) {
-      console.log('投稿しました');
-    } else {
-      throw publishRes;
+    if (!instaTokens && !tiktokTokens) {
+      console.log(`インスタ・TikTok共にアカウントが登録されていません。投稿をスキップします | userId: ${userId}`);
+      return; 
     }
 
-  } catch (error) {
-    console.error('投稿失敗', error);
-  }
-}
+    const postToPublish = await postsUtils.getPostMetadataToPublish({
+      pgClient,
+      userId,
+    });
 
-const getPostMetadataToPublish = async ({ pgClient, userId }) => {
-  try {    
-    await pgClient.connect();
-  
-    const selectionQuery = `
-      SELECT id, caption, extension, created_at, last_posted_at
-      FROM post
-      WHERE user_id = $1
-      ORDER BY created_at
-    `;
+    if (!postToPublish) {
+      console.log(`投稿するポストが見つかりません。投稿をスキップします | userId: ${userId}`);
+      return;
+    }
 
-    const { rows: posts } = await pgClient.query(selectionQuery, [
-      userId
+    const instaPublisherPromise = instaPublisher.main({
+      userId,
+      tokens: instaTokens,
+      postToPublish,
+    });
+
+    const tiktokPublisherPromise = tiktokPublisher.main({
+      userId,
+      tokens: tiktokTokens,
+      postToPublish,
+    });
+
+    const [instaRes, tikTokRes] = await Promise.all([
+      instaPublisherPromise,
+      tiktokPublisherPromise,
     ]);
 
-    let postToPublish = posts[0];
+    const responses = {
+      insta: instaRes,
+      tiktok: tikTokRes,
+    };
 
-    // もし一番古いポストがまだ一度も投稿されていない場合は、この一番古いポストを投稿する
-    // そうでなければ、ループで投稿するポストを探す
-    if (postToPublish?.last_posted_at) {
-      for (let i = 1; i < posts.length; i++) {
-        const current = posts[i];
-        const next = posts[i + 1];
-        if (!current) {
-          i = posts.length; // ループ強制終了
-        }
-        if (!current.last_posted_at) {
-          postToPublish = current;
-          i = posts.length; // ループ強制終了
-        }
-        if (!next) {
-          i = posts.length; // ループ強制終了
-        }
-        if (!next.last_posted_at || current.last_posted_at > next.last_posted_at) {
-          postToPublish = next;
-          i = posts.length; // ループ強制終了
-        }
-      }
+    if (responses.insta.status === STATUS.FAILED) {
+      console.error('インスタ投稿失敗:', responses.insta.error);
     }
-    return postToPublish;
+
+    if (responses.tiktok.status === 'failed') {
+      console.error('インスタ投稿失敗:', responses.tiktok.error);
+
+    }
+
+    if (responses.insta.status === 'completed'
+      || responses.tiktok.status === 'completed'
+    ) {
+      await postsUtils.updateLastPostedTimestamp({
+        pgClient, 
+        postId: postToPublish.id,
+      });
+    }
+
   } catch (error) {
-    console.error('投稿メタデータ取得失敗', error);
-    throw error;
+    console.error(`投稿失敗 | userId: ${userId}`, error);
   } finally {
     pgClient.end();
   }
-}
-
-const decryptToken = (encryptedToken, key) => {
-  const decipher = crypto.createDecipheriv('aes-256-gcm', key);
-  let decrypted = decipher.update(encryptedToken, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
 }

@@ -7,17 +7,17 @@
     <div v-if="saveSuccess" class="alert alert-success mt-3" role="alert">
       {{ saveSuccess }}
     </div>
-    <form @submit.prevent="submitForm" class="needs-validation">
+    <form @submit.prevent="submitSavePostForm" class="needs-validation">
       <div class="mb-3">
         <label for="caption" class="form-label">キャプション</label>
-        <textarea id="caption" v-model="caption" class="form-control" required></textarea>
+        <textarea id="caption" v-model="caption" class="form-control h-8" required></textarea>
       </div>
       <div class="mb-3">
         <label for="media" class="form-label">動画／画像を選択</label>
         <input type="file" id="media" ref="mediaInput" class="form-control-file" required>
       </div>
       <button type="submit" class="btn btn-primary btn-block" :disabled="saving">
-        {{ saving ? '登録中...' : '登録'}}
+        {{ saving ? '登録中...' : '登録' }}
       </button>
     </form>
   </div>
@@ -36,14 +36,15 @@
       <div v-for="post in posts" :key="post.id">
         <div class="card mb-4">
           <div class="card-header">
-          動画・画像URL: 
-          <a :href="mediaBucketUrl + '/' + sessionUser.idToken.payload.sub + '/' + post.id + '.' + post.extension" target="_blank">リンクを開く</a>
+            動画・画像URL:
+            <a :href="mediaBucketUrl + '/' + sessionUser?.idToken?.payload?.sub + '/' + post.id + '.' + post.extension"
+              target="_blank">リンクを開く</a>
           </div>
           <ul class="list-group list-group-flush">
             <li class="list-group-item">キャプション: {{ post.caption }}</li>
-            <li class="list-group-item">登録日: {{ new Date(post.created_at) }}</li>
-            <li class="list-group-item">前回投稿日: {{ post.last_posted_at ? new Date(post.last_posted_at) : null }}</li>
-            <li class="list-group-item">次回投稿日: {{ post.last_posted_at ? new Date(post.last_posted_at) : null }}</li>
+            <li class="list-group-item">登録日: {{ new Date(post.createdAt) }}</li>
+            <li class="list-group-item">前回の投稿: {{ post.lastPostedAt ? new Date(post.lastPostedAt) : null }}</li>
+            <li class="list-group-item">次回の投稿予定: {{ post.nextPostedAt ? new Date(post.nextPostedAt) : null }}</li>
             <li class="list-group-item">
               <button
                 @click="deletePost({ postId: post.id })"
@@ -55,6 +56,17 @@
           </ul>
         </div>
       </div>
+    </div>
+    <div>
+      <div v-if="errorSchedule" class="alert alert-danger mt-3" role="alert">
+        {{ errorSchedule }}
+      </div>
+      <div v-else-if="scheduleSuccess" class="alert alert-success mt-3" role="alert">
+        {{ scheduleSuccess }}
+      </div>
+      <button v-if="posts && posts.length > 0" @click="startAutoPublishPost" class="btn btn-secondary mb-4" :disabled="scheduling">
+        自動投稿を開始する
+      </button>
     </div>
   </div>
 </template>
@@ -80,6 +92,9 @@ export default {
       errorDeletePost: null,
       deleteSuccess: null,
 
+      errorSchedule: null,
+      scheduleSuccess: null,
+
       mediaBucketUrl: process.env.VUE_APP_MEDIA_BUCKET_URL
     };
   },
@@ -92,7 +107,7 @@ export default {
     this.posts = await this.getPosts();
   },
   methods: {
-    async submitForm() {
+    async submitSavePostForm() {
       this.clearMessages();
       this.saving = true;
 
@@ -108,18 +123,18 @@ export default {
           extension,
         });
 
-        console.log({postMetadata})
+        console.log({ postMetadata })
 
         // 動画・画像をS3にアップロードするための署名付きURLを取得
         const postId = postMetadata.id;
-        
+
         const presigned = await this.getPresignedUrl({
           userId,
           postId,
           extension
         });
 
-        console.log({presigned})
+        console.log({ presigned })
 
         // 動画・画像をS3にアップロード
         const form = new FormData();
@@ -139,7 +154,7 @@ export default {
           this.errorSavePost = null;
           this.saveSuccess = '登録しました'
           this.posts = await this.getPosts();
-        } 
+        }
       } catch (error) {
         console.error('登録失敗', error);
         this.errorSavePost = '登録に失敗しました。再度お試しください';
@@ -154,20 +169,21 @@ export default {
           throw new Error('セッションが正しくありません');
         }
 
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/post`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/post`;
 
         const response = await fetch(url, {
           method: 'POST',
           body: JSON.stringify({
             caption,
             extension,
+            sns: 'insta',
           }),
         });
         const jsonRes = await response.json();
 
         if (response.ok) {
           return jsonRes;
-        } else { 
+        } else {
           throw new Error(jsonRes.error || jsonRes.message);
         }
       } catch (error) {
@@ -178,7 +194,7 @@ export default {
 
     async getPresignedUrl({ userId, postId, extension }) {
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/presigned-url`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/presigned-url`;
         const queryParams = new URLSearchParams({
           postId,
           extension
@@ -188,7 +204,7 @@ export default {
 
         if (response.ok) {
           return jsonRes;
-        } else { 
+        } else {
           throw new Error(jsonRes.error || jsonRes.message);
         }
       } catch (error) {
@@ -205,7 +221,7 @@ export default {
         });
         if (response.ok) {
           return response;
-        } else { 
+        } else {
           throw new Error(response.error || response.message);
         }
       } catch (error) {
@@ -220,14 +236,18 @@ export default {
 
       try {
         const userId = this.sessionUser.idToken?.payload?.sub;
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/posts`;
-        const response = await fetch(url, { method: 'GET' });
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/posts`;
+        const queryParams = new URLSearchParams({
+          sns: 'insta'
+        });
+        const response = await fetch(`${url}?${queryParams}`, { method: 'GET' });
 
         const jsonRes = await response.json();
 
         if (response.ok) {
+          console.log({jsonRes})
           return jsonRes.posts;
-        } else { 
+        } else {
           throw new Error(jsonRes.error || jsonRes.message);
         }
       } catch (error) {
@@ -245,7 +265,7 @@ export default {
 
       try {
         const userId = this.sessionUser.idToken?.payload?.sub;
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/post/${postId}`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/post/${postId}`;
         const response = await fetch(url, { method: 'DELETE' });
 
         const jsonRes = await response.json();
@@ -254,7 +274,7 @@ export default {
           this.deleteSuccess = 'ポストを削除しました';
           this.posts = await this.getPosts();
           return jsonRes.posts;
-        } else { 
+        } else {
           throw new Error(jsonRes.error || jsonRes.message);
         }
       } catch (error) {
@@ -266,12 +286,49 @@ export default {
       }
     },
 
+    async startAutoPublishPost() {
+      this.scheduling = true;
+      this.clearMessages();
+      
+      try {
+        const userId = this.sessionUser?.idToken?.payload?.sub;
+        const schedulePublishUrl = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/schedule-publish-daily`;
+
+        const scheduleRes = await fetch(schedulePublishUrl, {
+          method: 'POST',
+          body: JSON.stringify({
+            sns: 'insta',
+            hour: '12',
+            minute: '00',
+          }),
+        });
+        const scheduleJsonRes = await scheduleRes.json();
+
+        if (scheduleRes.ok) {
+          this.scheduleSuccess = '自動投稿を開始しました。次の正午から自動投稿が始まります。';
+        } else {
+          this.errorSchedule = '自動投稿のスケジュール設定に失敗しました。再度お試しください。';
+          console.log('スケジュール失敗', scheduleJsonRes.error, scheduleJsonRes.message);
+        }
+      } catch (error) {
+        this.errorSchedule = '自動投稿のスケジュール設定に失敗しました。再度お試しください。';
+        console.log('サーバーエラー', error);
+      } finally {
+        this.scheduling = false;
+      }
+    },
+
     clearMessages() {
-      this.errorSavePost = null;
-      this.errorDeletePost = null;
       this.errorGetPosts = null;
+
       this.saveSuccess = null;
+      this.errorSavePost = null;
+
       this.deleteSuccess = null;
+      this.errorDeletePost = null;
+
+      this.scheduleSuccess = null;
+      this.errorSchedule = null;
     }
   }
 };

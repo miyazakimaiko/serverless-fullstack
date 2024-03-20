@@ -1,14 +1,14 @@
 <template>
   <div class="container">
     <h2 class="text-center mb-4">TikTok アカウント管理</h2>
-    <div v-if="errorSave" class="alert alert-danger mt-3" role="alert">
-      {{ errorSave }}
+    <div v-if="error" class="alert alert-danger mt-3" role="alert">
+      {{ error }}
     </div>
-    <div v-if="saveSuccess" class="alert alert-success mt-3" role="alert">
-      {{ saveSuccess }}
+    <div v-if="success" class="alert alert-success mt-3" role="alert">
+      {{ success }}
     </div>
 
-    <h3 class="mb-4">ステップ１：アプリの申請をする</h3>
+    <!-- <h3 class="mb-4">ステップ１：アプリの申請をする</h3>
     <form @submit.prevent="proveBucketOwnership" class="needs-validationstart mb-4">
       <ol class="text-start">
         <li><a href="https://developers.tiktok.com/">https://developers.tiktok.com/</a>にログインし、アプリを作成します。</li>
@@ -23,21 +23,12 @@
       <button type="submit" class="btn btn-primary btn-block" :disabled="saving">
         {{ saving ? '登録中...' : '登録' }}
       </button>
-    </form>
+    </form> -->
 
-    <h3 class="mb-4">ステップ３：TikTokアカウントの認証をする</h3>
     <form @submit.prevent="handleTikTokAuth" class="needs-validation mb-4">
-      <p>「App details」のセクションに表示されているクライアントキーとクライアントシークレットを以下のフォームから登録してください。登録ボタンを押すと、TikTokのログイン画面に移行します。</p>
-      <div class="mb-3">
-        <label for="clientKey" class="form-label">クライアントキー</label>
-        <input type="text" id="clientKey" v-model="clientKey" class="form-control" required :disabled="saving">
-      </div>
-      <div class="mb-3">
-        <label for="clientSecret" class="form-label">クライアントシークレット</label>
-        <input type="text" id="clientSecret" v-model="clientSecret" class="form-control" required :disabled="saving">
-      </div>
-      <button type="submit" class="btn btn-primary" :disabled="saving">
-        {{ saving ? '登録中...' : '登録' }}
+      <p>以下のボタンをクリックするとTikTokで認証が行われ、アプリからの自動投稿を可能にします。</p>
+      <button type="submit" class="btn btn-primary" :disabled="signingIn">
+        {{ signingIn ? 'TikTok ログイン中...' : 'TikTok ログイン' }}
       </button>
     </form>
   </div>
@@ -49,9 +40,10 @@ import { mapGetters } from 'vuex';
 export default {
   data() {
     return {
-      errorSave: null,
-      saveSuccess: null,
-      saving: false,
+      signingIn: false,
+      error: null,
+      success: null,
+      
       mediaBucketUrl: process.env.VUE_APP_MEDIA_BUCKET_URL,
       siteUrl: process.env.VUE_APP_SITE_URL,
     };
@@ -68,21 +60,26 @@ export default {
         throw new Error('セッションが正しくありません');
       }
       try {
-        await this.saveClientKeys(userId);
+        this.signingIn = true;
 
-        const REDIRECT_URI = 'https://d32lvnv31xi4tj.cloudfront.net/tiktok/redirect';
+        const authBaseUrl = 'https://www.tiktok.com/v2/auth/authorize';
+        const clientKey = process.env.VUE_APP_TIKTOK_CLIENT_KEY || '';
+        const redirectUrl = `${VUE_APP_SITE_URL}/tiktok-redirect`;
         const csrfState = Math.random().toString(36).substring(2);
-        const authUrl = `https://www.tiktok.com/v2/auth/authorize/?client_key=${this.clientKey}&scope=user.info.basic&response_type=code&redirect_uri=${REDIRECT_URI}&state=${csrfState}`;
+        const authUrl = `${authBaseUrl}/?client_key=${clientKey}&scope=user.info.basic&response_type=code&redirect_uri=${redirectUrl}&state=${csrfState}`;
         window.location.href = authUrl;
       } catch (error) {
-        console.error('Error redirecting to TikTok authorization:', error);
+        this.error = 'TikTok ログインの手続きに失敗しました。再度お試しください。';
+        console.error('TikTokログインルーティング失敗', error);
+      } finally {
+        this.signingIn = false;
       }
     },
 
     async saveClientKeys(userId) {
       this.clearMessages();
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/account/tiktok/client-keys`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/tiktok/client-keys`;
 
         const response = await fetch(url, {
           method: 'POST',
@@ -126,8 +123,6 @@ export default {
           extension
         });
 
-        console.log({ presigned })
-
         // 動画・画像をS3にアップロード
         const form = new FormData();
         Object.keys(presigned.fields).forEach(key => {
@@ -156,7 +151,7 @@ export default {
 
     async getPresignedUrl({ userId, filename, extension }) {
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/presigned-url`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/presigned-url`;
         
         const queryParams = new URLSearchParams({
           tikTokBucketVerificationFileName: filename,

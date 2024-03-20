@@ -52,26 +52,28 @@ export default {
       this.saveSuccess = null;
     },
 
-    async saveAccessToken(userId) {
+    async saveAccessToken() {
       this.clearMessages();
-      try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/account/insta/tokens`;
 
-        const response = await fetch(url, {
+      try {
+        const userId = this.sessionUser?.idToken?.payload?.sub;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/insta/tokens`;
+
+        const saveTokenRes = await fetch(url, {
           method: 'POST',
           body: JSON.stringify({
-            clientKey: this.clientKey,
-            clientSecret: this.clientSecret,
+            accountId: this.accountId,
+            accessToken: this.accessToken,
           }),
         });
-        const jsonRes = await response.json();
+        const saveTokenJsonRes = await saveTokenRes.json();
 
-        if (response.ok) {
-          this.saveSuccess = 'クライアントキーを登録しました';
-          return jsonRes;
-        } else {
-          throw new Error(jsonRes.error || jsonRes.message);
+        if (!saveTokenRes.ok) {
+          throw new Error(saveTokenJsonRes.error || saveTokenJsonRes.message);
         }
+
+        this.saveSuccess = saveTokenJsonRes.message;
+        return saveTokenJsonRes;
       } catch (error) {
         console.error('クライアントキーの登録失敗', error);
         this.errorSave = 'クライアントキーの登録に失敗しました';

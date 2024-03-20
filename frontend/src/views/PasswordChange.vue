@@ -10,7 +10,9 @@
         <label for="new-password" class="form-label">新しいパスワード</label>
         <input type="password" id="new-password" v-model="newPassword" class="form-control" required>
       </div>
-      <button type="submit" class="btn btn-primary btn-block">パスワード変更</button>
+      <button type="submit" class="btn btn-primary btn-block" :disabled="processing">
+        {{ processing ? '変更中...' : 'パスワード変更' }}
+      </button>
       <div v-if="error && !success" class="alert alert-danger mt-3" role="alert">
         {{ error }}
       </div>
@@ -34,6 +36,7 @@ export default {
       newPassword: '',
       error: '',
       success: false,
+      processing: false,
     };
   },
   mounted() {
@@ -67,6 +70,8 @@ export default {
       }
     },
     changePassword() {
+      this.processing = true;
+
       const authenticationData = {
         Username: this.email,
         Password: this.currentPassword,
@@ -90,14 +95,17 @@ export default {
               this.success = true;
             }
           });
+          this.processing = false;
         },
         onFailure: err => {
           console.error('認証失敗:', err);
           this.error = '認証に失敗しました。パスワードを確認してください。';
+          this.processing = false;
         },
         newPasswordRequired: () => {
           console.error('現在のパスワードが不正確です');
           this.error = '現在のパスワードが不正確です。';
+          this.processing = false;
         }
       });
     },

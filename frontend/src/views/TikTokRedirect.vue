@@ -1,20 +1,20 @@
 <template>
   <div>
     <div v-if="error" class="alert alert-danger" role="alert">
-      <p>認証に失敗しました。再度お試しください。<a class="link-opacity-100" @click="goBack">TikTokアカウント管理に戻る</a></p>
+      <p>認証に失敗しました。再度お試しください。<a class="link-opacity-100" href="/">TikTokアカウント管理に戻る</a></p>
     </div>
     <div v-else-if="success" class="alert alert-success" role="alert">
       <p>認証に成功しました。管理ページに戻ります</p>
-      <!-- You can add additional content or actions here -->
     </div>
     <div v-else>
-      <h1>認証しています。少々お待ちください...</h1>
+      <p>認証しています。少々お待ちください...</p>
     </div>
   </div>
 </template>
 
 <script>
 import { mapGetters } from 'vuex';
+import userPool from '@/user-pool';
 
 export default {
   data() {
@@ -24,11 +24,13 @@ export default {
     };
   },
   async mounted() {
-    const userId = this.sessionUser?.idToken?.payload?.sub;
+    const session = userPool.getCurrentUser();
+    const userId = session?.username;
 
     if (!userId) {
       throw new Error('セッションが正しくありません');
     }
+
     const params = new URLSearchParams(window.location.search);
     const authorizationCode = params.get('code');
     const scopes = params.get('scopes');
@@ -63,12 +65,9 @@ export default {
     ]),
   },
   methods: {
-    goBack() {
-      window.history.back();
-    },
     async fetchAndSaveAccessToken({ authorizationCode, userId }) {
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}api/user/${userId}/account/tiktok/token`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/tiktok/token`;
 
         const queryParams = new URLSearchParams({
           authorizationCode,

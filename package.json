@@ -7,7 +7,7 @@
   "scripts": {
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "cdk": "cdk",
-    "deploy:dev": "cdk deploy --profile test",
+    "deploy:dev": "cdk deploy --all --profile test",
     "test": "jest"
   },
   "devDependencies": {
@@ -15,7 +15,9 @@
     "jest": "^29.7.0"
   },
   "dependencies": {
+    "@aws-sdk/client-cloudwatch-events": "^3.533.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.521.0",
+    "@aws-sdk/client-lambda": "^3.533.0",
     "@aws-sdk/client-s3": "^3.529.1",
     "@aws-sdk/client-ssm": "^3.529.1",
     "@aws-sdk/s3-presigned-post": "^3.529.1",

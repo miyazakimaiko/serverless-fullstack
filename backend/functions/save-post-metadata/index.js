@@ -1,5 +1,6 @@
 /**
  *　ユーザーの投稿メタデータをDBにインサートします。
+ * TODO: 最大20件の投稿
  */
 
 const { Client } = require('pg');
@@ -8,20 +9,21 @@ const { clientConfig } = require('../../utils/db-client');
 
 exports.handler = async (event) => {
   const pgClient = new Client(clientConfig);
-  
-  const { userId } = event.pathParameters;
-  const { caption, extension } = JSON.parse(event.body);
-  
+    
   try {
+    const { userId } = event.pathParameters;
+    const { sns, caption, extension } = JSON.parse(event.body);
+
     await pgClient.connect();
 
-    const insertQuery = `
-      INSERT INTO post (user_id, caption, extension)
-      VALUES ($1, $2, $3)
+    const insertStatement = `
+      INSERT INTO post (user_id, sns, caption, extension)
+      VALUES ($1, $2, $3, $4)
       RETURNING id, created_at
     `;
-    const result = await pgClient.query(insertQuery, [
+    const result = await pgClient.query(insertStatement, [
       userId,
+      sns,
       caption,
       extension,
     ]);
@@ -42,7 +44,8 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         message: '投稿情報の保存に失敗しました',
-        error: error.message,
+        // @ts-ignore
+        error: error.message || error,
       }),
     };
   } finally {

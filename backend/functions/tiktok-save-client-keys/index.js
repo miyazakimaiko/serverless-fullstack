@@ -3,13 +3,15 @@
  */
 
 const { Client } = require('pg');
-const { SSMClient, GetParameterCommand } = require("@aws-sdk/client-ssm");
+const { SSMClient } = require("@aws-sdk/client-ssm");
+const { getEncryptionKeyFromSsm } = require('../../utils/client-ssm.js');
 const { headers } = require('../../utils/http-response');
 const { clientConfig } = require('../../utils/db-client');
 const { encryptText } = require('../../utils/encryption');
 
 exports.handler = async (event) => {
   const pgClient = new Client(clientConfig);
+  const ssmClient = new SSMClient();
 
   try {
     const body = JSON.parse(event.body);
@@ -19,7 +21,7 @@ exports.handler = async (event) => {
     }
     const { userId } = event.pathParameters;
 
-    const encryptionKey = await getEncryptionKeyFromSsm();
+    const encryptionKey = await getEncryptionKeyFromSsm(ssmClient);
 
     const encryptedClientSecret = encryptText({
       text: body.clientSecret,
@@ -53,28 +55,12 @@ exports.handler = async (event) => {
       headers,
       body: JSON.stringify({
         message: 'SNSクライアントデータの保存に失敗しました',
-        error: error.message,
+        // @ts-ignore
+        error: error.message || error,
       }),
     };
   } finally {
     await pgClient.end();
-  }
-}
-
-const getEncryptionKeyFromSsm = async () => {
-  const client = new SSMClient();
-  try {
-    const input = {
-      Name: process.env.SSM_ENCRYPTION_KEY_PARAMETER_NAME,
-    };
-    const command = new GetParameterCommand(input);
-    const response = await client.send(command);
-
-    console.log({ response })
-    return response.Parameter.Value;
-  } catch (error) {
-    console.log('暗号化キー取得失敗', error);
-    throw error;
   }
 }
 

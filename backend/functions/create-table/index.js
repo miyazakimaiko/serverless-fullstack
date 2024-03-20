@@ -34,21 +34,21 @@ exports.handler = async () => {
         encrypted_refresh_token TEXT,
         refresh_expired_at TIMESTAMP,
         token_scope VARCHAR(255),
-        token_type VARCHAR(20),
+        token_type VARCHAR(20)
       );
     `;
 
     const createInstaAccountTableQuery = `
-    CREATE TABLE IF NOT EXISTS insta_account (
-      user_id VARCHAR(255) NOT NULL,
-      account_id VARCHAR(255) NOT NULL,
-      encrypted_access_token TEXT NOT NULL
-    );
-  `;
+      CREATE TABLE IF NOT EXISTS insta_account (
+        user_id VARCHAR(255) NOT NULL,
+        account_id VARCHAR(255) NOT NULL,
+        encrypted_access_token TEXT NOT NULL
+      );
+    `;
 
-    await pgClient.query(createTableQuery);
-    await pgClient.query(createTikTokAccountTableQuery);
-    await pgClient.query(createInstaAccountTableQuery);
+    // await pgClient.query(createTableQuery);
+    // await pgClient.query(createTikTokAccountTableQuery);
+    // await pgClient.query(createInstaAccountTableQuery);
 
     return 'テーブルが作成されました';
   } catch (error) {
