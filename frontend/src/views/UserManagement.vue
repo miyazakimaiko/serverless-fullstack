@@ -117,10 +117,17 @@ export default {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json' },
         });
-        await response.json();
-        this.error = null;
-        this.deleteSuccessMsg = `ユーザーID: ${user.Username} を削除しました`;
-        this.getUsers();
+
+        const jsonRes = await response.json();
+
+        if (!response.ok) {
+          console.error('削除失敗:', jsonRes.error || jsonRes.message);
+          this.error = '削除に失敗しました';
+        } else {
+          this.error = null;
+          this.deleteSuccessMsg = `ユーザーID: ${user.Username} を削除しました`;
+          this.getUsers();
+        }
       } catch (error) {
         console.error('削除失敗:', error);
         this.error = '削除に失敗しました';
