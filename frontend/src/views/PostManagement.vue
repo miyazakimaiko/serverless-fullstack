@@ -16,7 +16,10 @@
         <label for="media" class="form-label">動画／画像を選択</label>
         <input type="file" id="media" ref="mediaInput" class="form-control-file" required>
       </div>
-      <button type="submit" class="btn btn-primary btn-block" :disabled="saving">
+      <div v-if="posts && posts.length >= maxPostCounts">
+        <p>登録された投稿の数が最大値に達しました。({{ maxPostCounts }} 投稿)<br/>新たに登録が必要な場合は、既存の投稿を削除してください。</p>
+      </div>
+      <button type="submit" class="btn btn-primary btn-block" :disabled="saving || (posts && posts.length >= maxPostCounts)">
         {{ saving ? '登録中...' : '登録' }}
       </button>
     </form>
@@ -84,6 +87,7 @@ export default {
       saving: false,
 
       posts: null,
+      maxPostCounts: 20,
       getting: null,
       errorGetPosts: null,
 
@@ -176,7 +180,6 @@ export default {
           body: JSON.stringify({
             caption,
             extension,
-            sns: 'insta',
           }),
         });
         const jsonRes = await response.json();
@@ -237,10 +240,7 @@ export default {
       try {
         const userId = this.sessionUser.idToken?.payload?.sub;
         const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/posts`;
-        const queryParams = new URLSearchParams({
-          sns: 'insta'
-        });
-        const response = await fetch(`${url}?${queryParams}`, { method: 'GET' });
+        const response = await fetch(url, { method: 'GET' });
 
         const jsonRes = await response.json();
 
@@ -297,7 +297,6 @@ export default {
         const scheduleRes = await fetch(schedulePublishUrl, {
           method: 'POST',
           body: JSON.stringify({
-            sns: 'insta',
             hour: '12',
             minute: '00',
           }),
