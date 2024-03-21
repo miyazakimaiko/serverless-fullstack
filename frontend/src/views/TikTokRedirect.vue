@@ -1,13 +1,13 @@
 <template>
-  <div>
+  <div class="container">
     <div v-if="error" class="alert alert-danger" role="alert">
-      <p>認証に失敗しました。再度お試しください。<a class="link-opacity-100" href="/">TikTokアカウント管理に戻る</a></p>
+      認証に失敗しました。再度お試しください。<a class="link-opacity-100" role="button" @click="routeToMainPage">戻る</a>
     </div>
-    <div v-else-if="success" class="alert alert-success" role="alert">
-      <p>認証に成功しました。管理ページに戻ります</p>
+    <div v-else-if="!error && success" class="alert alert-success" role="alert">
+      認証に成功しました。管理ページに戻ります
     </div>
     <div v-else>
-      <p>認証しています。少々お待ちください...</p>
+      認証しています。少々お待ちください...
     </div>
   </div>
 </template>
@@ -24,39 +24,48 @@ export default {
     };
   },
   async mounted() {
-    const session = userPool.getCurrentUser();
-    const userId = session?.username;
+    try {
+      const session = userPool.getCurrentUser();
+      const userId = session?.username;
 
-    if (!userId) {
-      throw new Error('セッションが正しくありません');
-    }
+      if (!userId) {
+        this.error = true;
+        return;
+      }
 
-    const params = new URLSearchParams(window.location.search);
-    const authorizationCode = params.get('code');
-    const scopes = params.get('scopes');
-    const state = params.get('state');
-    const error = params.get('error');
-    const errorDescription = params.get('error_description');
+      const params = new URLSearchParams(window.location.search);
+      const authorizationCode = params.get('code');
+      const error = params.get('error');
+      const errorDescription = params.get('error_description');
 
-    if (error || !authorizationCode) {
-      console.error('認証エラー', error);
-      console.error('TikTok認証エラー内容', errorDescription);
-      this.error = true;
-    } else {
+      if (error || !authorizationCode) {
+        console.error('認証エラー', error, errorDescription);
+        this.error = true;
+        return;
+      }
+
       const response = await this.fetchAndSaveAccessToken({
         authorizationCode,
         userId
       });
 
-      if (!storeRes.ok) {
-        console.error('トークン保存エラー', storeRes.status, storeRes.statusText);
+      const jsonRes = await response.json();
+
+      if (!response.ok) {
+        console.error('トークンエラー', jsonRes);
         this.error = true;
-      } else {
-        this.success = true;
-        setTimeout(() => {
-          this.goBack();
-        }, 4000);
+        return;
       }
+
+      this.error = false;
+      this.success = true;
+
+      setTimeout(() => {
+        this.routeToMainPage();
+      }, 3000);
+    } catch (error) {
+      console.error('エラー', error);
+      this.error = true;
     }
   },
   computed: {
@@ -67,32 +76,24 @@ export default {
   methods: {
     async fetchAndSaveAccessToken({ authorizationCode, userId }) {
       try {
-        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/tiktok/token`;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/tiktok/tokens`;
 
         const queryParams = new URLSearchParams({
           authorizationCode,
+          userId,
         });
 
-        const response = await fetch(`${url}?${queryParams}`, {
+        return await fetch(`${url}?${queryParams}`, {
           method: 'POST',
         });
-        const jsonRes = await response.json();
-
-        if (response.ok) {
-          this.saveSuccess = 'アクセストークンを登録しました';
-          return jsonRes;
-        } else {
-          throw new Error(jsonRes.error || jsonRes.message);
-        }
       } catch (error) {
-        console.error('アクセストークンの登録失敗', error);
-        this.errorSave = 'アクセストークンの登録に失敗しました';
+        console.error('アクセストークンの取得または保存失敗', error);
+        throw error;
       }
     },
-    calculateExpiryTime(expiresInSeconds) {
-      const currentTime = Math.floor(Date.now() / 1000);
-      const expiryTime = currentTime + expiresInSeconds;
-      return expiryTime;
+
+    routeToMainPage() {
+      window.location.href = process.env.VUE_APP_SITE_URL;
     }
   }
 };

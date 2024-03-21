@@ -64,9 +64,9 @@ export default {
 
         const authBaseUrl = 'https://www.tiktok.com/v2/auth/authorize';
         const clientKey = process.env.VUE_APP_TIKTOK_CLIENT_KEY || '';
-        const redirectUrl = `${VUE_APP_SITE_URL}/tiktok-redirect`;
+        const redirectUrl = `${process.env.VUE_APP_SITE_URL}/tiktok-redirect`;
         const csrfState = Math.random().toString(36).substring(2);
-        const authUrl = `${authBaseUrl}/?client_key=${clientKey}&scope=user.info.basic&response_type=code&redirect_uri=${redirectUrl}&state=${csrfState}`;
+        const authUrl = `${authBaseUrl}/?client_key=${clientKey}&scope=user.info.basic,video.publish&response_type=code&redirect_uri=${redirectUrl}&state=${csrfState}`;
         window.location.href = authUrl;
       } catch (error) {
         this.error = 'TikTok ログインの手続きに失敗しました。再度お試しください。';

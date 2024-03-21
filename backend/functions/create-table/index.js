@@ -23,18 +23,15 @@ exports.handler = async () => {
       );
     `;
 
+    const dropTableQuery = `
+        DROP TABLE IF EXISTS tiktok_account
+    `;
+
     const createTikTokAccountTableQuery = `
       CREATE TABLE IF NOT EXISTS tiktok_account (
         user_id VARCHAR(255) NOT NULL,
-        tiktok_user_id VARCHAR(255),
-        client_key VARCHAR(255) NOT NULL,
-        encrypted_client_secret TEXT NOT NULL,
         encrypted_access_token TEXT,
-        access_expired_at TIMESTAMP,
-        encrypted_refresh_token TEXT,
-        refresh_expired_at TIMESTAMP,
-        token_scope VARCHAR(255),
-        token_type VARCHAR(20)
+        encrypted_refresh_token TEXT
       );
     `;
 
@@ -46,8 +43,8 @@ exports.handler = async () => {
       );
     `;
 
-    // await pgClient.query(createTableQuery);
-    // await pgClient.query(createTikTokAccountTableQuery);
+    await pgClient.query(dropTableQuery);
+    await pgClient.query(createTikTokAccountTableQuery);
     // await pgClient.query(createInstaAccountTableQuery);
 
     return 'テーブルが作成されました';
