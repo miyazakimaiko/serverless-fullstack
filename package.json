@@ -2,23 +2,23 @@
   "name": "spa-sample-site",
   "version": "0.1.0",
   "bin": {
-    "spa-sample-site": "bin/spa-sample-site.js"
+    "app": "bin/app.js"
   },
   "scripts": {
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "cdk": "cdk",
-    "deploy:dev": "cdk deploy --all --profile test",
+    "deploy:dev": "cdk deploy --all --profile default",
     "test": "jest"
   },
   "devDependencies": {
+    "@types/pg": "^8.11.4",
     "aws-cdk": "2.129.0",
     "jest": "^29.7.0"
   },
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-events": "^3.533.0",
     "@aws-sdk/client-cognito-identity-provider": "^3.521.0",
-    "@aws-sdk/client-lambda": "^3.533.0",
     "@aws-sdk/client-s3": "^3.529.1",
+    "@aws-sdk/client-sqs": "^3.540.0",
     "@aws-sdk/client-ssm": "^3.529.1",
     "@aws-sdk/s3-presigned-post": "^3.529.1",
     "aws-cdk-lib": "^2.130.0",

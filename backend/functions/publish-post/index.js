@@ -1,17 +1,19 @@
-/**
- *　データベースから指定のユーザーの投稿する一件の投稿データを取得し、インスタとTikTokに投稿します。
- */
-const { Client } = require('pg');
-const { SSMClient } = require('@aws-sdk/client-ssm');
-const { clientConfig } = require('../../utils/db-client.js');
-const { getEncryptionKeyFromSsm } = require('../../utils/client-ssm.js');
-const tokensUtils = require('./utils/tokens.js');
-const postsUtils = require('./utils/posts.js');
-const instaPublisher = require('./publishers/instagram.js');
-const tiktokPublisher = require('./publishers/tiktok.js');
-const { STATUS } = require('./utils/enums.js');
+import { Client } from 'pg';
+import { SSMClient } from '@aws-sdk/client-ssm';
+import { clientConfig } from '../../utils/db.js';
+import { getEncryptionKeyFromSsm } from '../../utils/ssm.js';
+import { instaPublisher } from './publishers/instagram.js';
+import { tiktokPublisher } from './publishers/tiktok.js';
+import * as tokenUtils from './utils/tokens.js';
+import * as postUtils from './utils/posts.js';
+import { STATUS } from './utils/enums.js';
 
-exports.handler = async (event) => {
+const parameterName = process.env.SSM_ENCRYPTION_KEY_PARAMETER_NAME;
+
+/**
+ *　@description データベースから指定のユーザーの投稿する一件の投稿データを取得し、インスタとTikTokに投稿
+ */
+export async function handler(event) {
   const ssmClient = new SSMClient();
   const pgClient = new Client(clientConfig);
   let userId;
@@ -19,18 +21,21 @@ exports.handler = async (event) => {
   try {
     await pgClient.connect();
 
-    userId = event.userId;
+    const messageBody = JSON.parse(event.Records[0].body);
 
-    const encryptionKey = await getEncryptionKeyFromSsm(ssmClient);
+    userId = messageBody.userId;
 
-    const instaTokens = await tokensUtils.getInstaTokens({
+    const encryptionKey = await getEncryptionKeyFromSsm({ ssmClient, parameterName });
+
+    const instaTokens = await tokenUtils.getInstaTokens({
       pgClient,
       encryptionKey,
       userId,
     });
 
-    const tiktokTokens = await tokensUtils.getTikTokTokens({
+    const tiktokTokens = await tokenUtils.getTikTokTokens({
       pgClient,
+      ssmClient,
       encryptionKey,
       userId,
     });
@@ -40,7 +45,7 @@ exports.handler = async (event) => {
       return; 
     }
 
-    const postToPublish = await postsUtils.getPostMetadataToPublish({
+    const postToPublish = await postUtils.getPostMetadataToPublish({
       pgClient,
       userId,
     });
@@ -50,19 +55,22 @@ exports.handler = async (event) => {
       return;
     }
 
-    const instaPublisherPromise = instaPublisher.main({
+    const instaPublisherPromise = instaPublisher({
       userId,
       tokens: instaTokens,
       postToPublish,
     });
 
-    const tiktokPublisherPromise = tiktokPublisher.main({
+    const tiktokPublisherPromise = tiktokPublisher({
       userId,
       tokens: tiktokTokens,
       postToPublish,
     });
 
-    const [instaRes, tikTokRes] = await Promise.all([
+    const [
+      instaRes, 
+      tikTokRes,
+    ] = await Promise.all([
       instaPublisherPromise,
       tiktokPublisherPromise,
     ]);
@@ -76,20 +84,20 @@ exports.handler = async (event) => {
       console.error('インスタ投稿失敗:', responses.insta.error);
     }
 
-    if (responses.tiktok.status === 'failed') {
-      console.error('インスタ投稿失敗:', responses.tiktok.error);
-
+    if (responses.tiktok.status === STATUS.FAILED) {
+      console.error('TikTok投稿失敗:', responses.tiktok.error);
     }
 
-    if (responses.insta.status === 'completed'
-      || responses.tiktok.status === 'completed'
+    if (
+      responses.insta.status === STATUS.COMPLETED
+      || responses.tiktok.status === STATUS.COMPLETED
     ) {
-      await postsUtils.updateLastPostedTimestamp({
+      await postUtils.updateLastPostedTimestamp({
         pgClient, 
         postId: postToPublish.id,
       });
     }
-
+    console.log('投稿完了');
   } catch (error) {
     console.error(`投稿失敗 | userId: ${userId}`, error);
   } finally {
