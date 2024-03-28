@@ -53,7 +53,7 @@ export default {
           if (err) {
             console.error('セッション取得に失敗しました', err);
             this.clearUser();
-            this.$router.push({ path: 'login' });
+            this.$router.push({ path: '/login' });
             return;
           }
           user.getUserAttributes((err, attributes) => {

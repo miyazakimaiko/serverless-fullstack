@@ -86,7 +86,7 @@ export default {
       }
       this.clearUser();
       console.log('ログアウトしました')
-      this.$router.push({ path: 'login' });
+      this.$router.push({ path: '/login' });
     },
     checkUser() {
       const cognitoUser = userPool.getCurrentUser();

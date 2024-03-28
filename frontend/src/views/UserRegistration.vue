@@ -130,7 +130,7 @@ export default {
           else {
             this.verifiedMessage = '確認コードが認証されました。ログインページに移行します';
             setTimeout(() => {
-              this.$router.push({ path: 'login' });
+              this.$router.push({ path: '/login' });
             }, 3000);
           }
           this.verifying = false;
