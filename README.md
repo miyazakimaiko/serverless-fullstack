@@ -101,7 +101,7 @@ VUE_APP_SITE_URL=https://example.cloudfront.net
 VUE_APP_TIKTOK_CLIENT_KEY=exampleClientKey2384
 ```
 
-
+![コマンドアウトプット例](readme-asset/output-example.png);
 
 frontend/.env ファイルを作成後、frontend ディレクトリから以下のコマンドでフロントエンドをビルドします。
 
