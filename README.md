@@ -3,9 +3,8 @@
 ## 目次
 
 1. [環境](#環境)
-2. [ディレクトリ構成](#ディレクトリ構成)
 3. [開発環境構築](#開発環境構築)
-4. [トラブルシューティング](#トラブルシューティング)
+4. [テスト環境のデプロイ方法](#テスト環境のデプロイ方法)
 
 
 ## 環境
@@ -29,18 +28,9 @@
 
 その他のパッケージのバージョンは package.json を参照してください
 
-## ディレクトリ構成
-
-
-
-
-<p align="right">(<a href="#top">トップへ</a>)</p>
-
 ## 開発環境構築
 
 CDK CLI と Node.js v18 以降をお使いのマシンにインストールする必要があります。
-
-Docker を使用しない前提のサーバーレススタックですので、開発環境は CDK コマンドを使用して AWS 上にデプロイすることとします。
 
 ### テスト環境のデプロイ方法
 
@@ -48,7 +38,7 @@ Docker を使用しない前提のサーバーレススタックですので、�
 
 3つ目のステップは、初めてデプロイする際のみ必要です。2度目以降は行う必要がありません。
 
-#### ステップ1
+#### ステップ 1
 
 ターミナルで frontend ディレクトリに移動し、以下のコマンドを実行してください。
 
@@ -56,20 +46,35 @@ Docker を使用しない前提のサーバーレススタックですので、�
 npm run build
 ```
 
-#### ステップ2
+#### ステップ 2
 
 ルートフォルダにある .env ファイルを以下の環境変数例と[環境変数の一覧](#環境変数の一覧)を元に作成します。
 
 
-> AWS_REGION=eu-west-1  
-> AWS_STAGE=dev  
-> AWS_PROFILE=dev  
-> APP_NAME=sls  
-> CDK_DEFAULT_ACCOUNT=1234567890  
-> CDK_DEFAULT_REGION=eu-west-1  
-> DB_USER=username  
-> DB_PASSWORD=alsejbfsdfjhaiweury  
-> DB_NAME=dbname  
+```shell
+#-------------------------------------------------------------------
+# CDK 共通
+#-------------------------------------------------------------------
+AWS_ACCOUNT=1234567890
+AWS_REGION=eu-west-1
+AWS_STAGE=test
+APP_NAME=myapp
+
+#-------------------------------------------------------------------
+# データベース用
+#-------------------------------------------------------------------
+DB_USER=examplename
+DB_PASSWORD=examplepassword
+DB_NAME=exampledbname
+ENCRYPTION_KEY_STRING=example1234567890IlJ1x1s6yH1cox7oBMAXDxWeU4=
+
+#-------------------------------------------------------------------
+# TikTokクライアント用
+#-------------------------------------------------------------------
+TIKTOK_CLIENT_KEY=exampleclientkey
+TIKTOK_CLIENT_SECRET=exampleclientsecret
+TIKTOK_CLIENT_AUDITED=false
+```
 
 .env ファイルを作成後、ルートディレクトリに移動し、以下のコマンドで開発環境をデプロイします。
 
@@ -77,112 +82,78 @@ npm run build
 npm run deploy:dev
 ```
 
-このコマンドは、デプロイする AWS アカウントの認証情報が default として .aws/credentials に設定されていることを前提としています。
-
-認証情報が default 意外に保管されている場合は、それに応じて package.json ファイルの script -> deploy:dev -> --profile パラメータをを変更してください。
-
-
-アカウントの認証情報設定方法：https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/cli-configure-files.html#cli-configure-files-methods
+> このコマンドは、デプロイする AWS アカウントの認証情報が default として .aws/credentials に設定されていることを前提としています。
+> 認証情報が default 意外に保管されている場合は、それに応じて package.json ファイルの script -> deploy:dev -> --profile パラメータをを変更するか、もしくは `AWS_ACCESS_KEY_ID` と `AWS_SECRET_ACCESS_KEY` を .env に直接書き込んでください。
+> アカウントの認証情報設定方法：https://docs.aws.amazon.com/ja_jp/cli/latest/userguide/cli-configure-files.html#cli-configure-files-methods
 
 
-#### ステップ3
+#### ステップ 3
 
-
-ステップ2 完了後のコマンドアウトプットに含まれている vueappenv の値をすべてコピーし、frontend/.env に貼り付けてください。
-
+ステップ 2 完了後のコマンドアウトプットに含まれている vueappenv の値をすべてコピーし、frontend/.env に貼り付けてください。
 以下のような環境変数となります。
 
+```shell
+VUE_APP_COGNITO_USER_POOL_ID=eu-west-1_123example  
+VUE_APP_COGNITO_CLIENT_ID=example23rui3asldjfblasie  
+VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/  
+VUE_APP_MEDIA_BUCKET_URL=https://example-media-bucket.s3.eu-west-1.amazonaws.com  
+VUE_APP_SITE_URL=https://example.cloudfront.net  
+VUE_APP_TIKTOK_CLIENT_KEY=exampleClientKey2384
+```
 
-> VUE_APP_COGNITO_USER_POOL_ID=eu-west-1_123example  
-> VUE_APP_COGNITO_CLIENT_ID=example23rui3asldjfblasie  
-> VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/  
-> VUE_APP_MEDIA_BUCKET_URL=https://example-media-bucket.s3.eu-west-1.amazonaws.com  
-> VUE_APP_SITE_URL=https://example.cloudfront.net  
 
 
-frontend/.env ファイルを作成後、ルートディレクトリから以下のコマンドで開発環境を再デプロイします。
-
+frontend/.env ファイルを作成後、frontend ディレクトリから以下のコマンドでフロントエンドをビルドします。
 
 ```
-cd frontend && npm run build
-cd .. && npm run deploy:dev
+npm run build
+```
+
+ビルドが完了したら、ルートディレクトリから以下のコマンドで開発環境を再デプロイします。
 
 ```
+npm run deploy:dev
+```
+
 
 
 ### 動作確認
 
-デプロイが完了しましたら、アウトプットに含まれている VUE_APP_SITE_URL のURLにアクセスできるか確認します。
+`npm run deploy:dev` コマンドが完了しましたら、アウトプットに含まれている VUE_APP_SITE_URL のURLにアクセスできるか確認します。
 
 フロントエンドにアクセスできたら成功です。
 
 ### 環境変数の一覧
 
-| 変数名                 | 役割                                      | デフォルト値                       | DEV 環境での値                           |
-| ---------------------- | ----------------------------------------- | ---------------------------------- | ---------------------------------------- |
-| MYSQL_ROOT_PASSWORD    | MySQL のルートパスワード（Docker で使用） | root                               |                                          |
-| MYSQL_DATABASE         | MySQL のデータベース名（Docker で使用）   | django-db                          |                                          |
-| MYSQL_USER             | MySQL のユーザ名（Docker で使用）         | django                             |                                          |
-| MYSQL_PASSWORD         | MySQL のパスワード（Docker で使用）       | django                             |                                          |
-| MYSQL_HOST             | MySQL のホスト名（Docker で使用）         | db                                 |                                          |
-| MYSQL_PORT             | MySQL のポート番号（Docker で使用）       | 3306                               |                                          |
-| SECRET_KEY             | Django のシークレットキー                 | secretkey                          | 他者に推測されないランダムな値にすること |
-| ALLOWED_HOSTS          | リクエストを許可するホスト名              | localhost 127.0.0.1 [::1] back web | フロントのホスト名                       |
-| DEBUG                  | デバッグモードの切り替え                  | True                               | False                                    |
-| TRUSTED_ORIGINS        | CORS で許可するオリジン                   | http://localhost                   |                                          |
-| DJANGO_SETTINGS_MODULE | Django アプリケーションの設定モジュール   | project.settings.local             | project.settings.dev                     |
+#### /.env
 
-### コマンド一覧
-
-| Make                | 実行する処理                                                            | 元のコマンド                                                                               |
-| ------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| make prepare        | node_modules のインストール、イメージのビルド、コンテナの起動を順に行う | docker-compose run --rm front npm install<br>docker-compose up -d --build                  |
-| make up             | コンテナの起動                                                          | docker-compose up -d                                                                       |
-| make build          | イメージのビルド                                                        | docker-compose build                                                                       |
-| make down           | コンテナの停止                                                          | docker-compose down                                                                        |
-| make loaddata       | テストデータの投入                                                      | docker-compose exec app poetry run python manage.py loaddata crm.json                      |
-| make makemigrations | マイグレーションファイルの作成                                          | docker-compose exec app poetry run python manage.py makemigrations                         |
-| make migrate        | マイグレーションを行う                                                  | docker-compose exec app poetry run python manage.py migrate                                |
-| make show_urls      | エンドポイントをターミナル上で一覧表示                                  | docker-compose exec app poetry run python manage.py show_urls                              |
-| make shell          | テストデータの投入                                                      | docker-compose exec app poetry run python manage.py debugsqlshell                          |
-| make superuser      | スーパーユーザの作成                                                    | docker-compose exec app poetry run python manage.py createsuperuser                        |
-| make test           | テストを実行                                                            | docker-compose exec app poetry run pytest                                                  |
-| make test-cov       | カバレッジを表示させた上でテストを実行                                  | docker-compose exec app poetry run pytest --cov                                            |
-| make format         | black と isort を使ってコードを整形                                     | docker-compose exec app poetry run black . <br> docker-compose exec app poetry run isort . |
-| make update         | Poetry 内のパッケージの更新                                             | docker-compose exec app poetry update                                                      |
-| make app            | アプリケーション のコンテナへ入る                                       | docker exec -it app bash                                                                   |
-| make db             | データベースのコンテナへ入る                                            | docker exec -it db bash                                                                    |
-| make pdoc           | pdoc ドキュメントの作成                                                 | docker-compose exec app env CI_MAKING_DOCS=1 poetry run pdoc -o docs application           |
-| make init           | Terraform の初期化                                                      | docker-compose -f infra/docker-compose.yml run --rm terraform init                         |
-| make fmt            | Terraform の設定ファイルをフォーマット                                  | docker-compose -f infra/docker-compose.yml run --rm terraform fmt                          |
-| make validate       | Terraform の構成ファイルが正常であることを確認                          | docker-compose -f infra/docker-compose.yml run --rm terraform validate                     |
-| make show           | 現在のリソースの状態を参照                                              | docker-compose -f infra/docker-compose.yml run --rm terraform show                         |
-| make apply          | Terraform の内容を適用                                                  | docker-compose -f infra/docker-compose.yml run --rm terraform apply                        |
-| make destroy        | Terraform で構成されたリソースを削除                                    | docker-compose -f infra/docker-compose.yml run --rm terraform destroy                      |
+| 変数名                  | 役割                                       | 例                                                 | 詳細                                                 |
+| ---------------------- | ----------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| AWS_ACCOUNT            | AWS アカウント番号                           | 1234567890                                          | AWS アカウントの一意の識別子                         |
+| AWS_REGION             | AWS リージョン                              | eu-west-1                                           | アプリケーションをデプロイする AWS リージョン        |
+| AWS_STAGE              | AWS ステージ                                | dev, prod 等                                        | CDKが作成する全てのリソース名に、APP_NAME と共に接頭辞として使用されます   |
+| APP_NAME               | アプリ名                                    | myapp                                               | CDKが作成する全てのリソース名に、AWS_STAGE と共に接頭辞として使用されます |
+| DB_NAME                | データベース名                               | myapp                                               | デフォルトで作成されるデータベース名前               |
+| DB_USER                | マスターユーザー名                           | examplename                                         | デフォルトで作成されるデータベースのマスターユーザー名 |
+| DB_PASSWORD            | マスターパスワード                           | examplepassword                                     | デフォルトで作成されるデータベースのマスターパスワード |
+| ENCRYPTION_KEY_STRING  | データを暗号化および復号化するためのキー        | example1234567890IlJ1x1s6yH1cox7oBMAXDxWeU4=        | 標準の8ビットASCIIエンコーディングを各文字に使用する場合、32文字(256-bit) のランダムな文字列を使用してください |
+| TIKTOK_CLIENT_KEY      | TikTok クライアントキー                     | exampleclientkey                                    | TikTok API へのアクセスに使用されるクライアントキー |
+| TIKTOK_CLIENT_SECRET   | TikTok クライアントシークレット               | exampleclientsecret                                 | TikTok API へのアクセスに使用されるクライアントシークレット |
+| TIKTOK_CLIENT_AUDITED  | TikTok クライアント監査済みフラグ             | false                                               | 未監査クライアントからアップロードされたすべてのコンテンツはプライベート表示モードに制限されます。監査を受け、通った後以下の環境変数を true にすると、TikTokへ一般公開モードで投稿します。参照: https://developers.tiktok.com/doc/content-sharing-guidelines/  |
 
 
-## トラブルシューティング
 
-### .env: no such file or directory
+#### /frontend/.env
 
-.env ファイルがないので環境変数の一覧を参考に作成しましょう
+フロントエンドの 環境変数は　`npm run deploy:dev` コマンド完了時に Output として自動的に生成されます。
 
-### docker daemon is not running
-
-Docker Desktop が起動できていないので起動させましょう
-
-### Ports are not available: address already in use
-
-別のコンテナもしくはローカル上ですでに使っているポートがある可能性があります
-<br>
-下記記事を参考にしてください
-<br>
-[コンテナ起動時に Ports are not available: address already in use が出た時の対処法について](https://qiita.com/shun198/items/ab6eca4bbe4d065abb8f)
-
-### Module not found
-
-make build
-
-を実行して Docker image を更新してください
+| 変数名                     | 役割                                       | 例                                                 | 詳細                                                |
+| ------------------------- | ----------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
+| VUE_APP_COGNITO_USER_POOL_ID | Cognito ユーザープール ID                  | eu-west-1_example                                | Cognito ユーザープールの一意の識別子             |
+| VUE_APP_COGNITO_CLIENT_ID | Cognito クライアント ID                     | example0nph083mfapian496                            | Cognito クライアントの一意の識別子                |
+| VUE_APP_API_ENDPOINT      | API エンドポイント                           | https://example.execute-api.eu-west-1.amazonaws.com/prod/api | アプリケーションのバックエンド API のエンドポイント |
+| VUE_APP_MEDIA_BUCKET_URL  | メディアバケット URL                         | https://example-media-bucket.s3.eu-west-1.amazonaws.com | アプリケーションで使用するメディアバケットの URL    |
+| VUE_APP_SITE_URL          | サイト URL                                  | https://example.cloudfront.net               | アプリケーションのホストされているサイトの URL     |
+| VUE_APP_TIKTOK_CLIENT_KEY | TikTok クライアントキー                      | example68gdcwy0x                                    | TikTok API へのアクセスに使用されるクライアントキー |
 
 <p align="right">(<a href="#top">トップへ</a>)</p>
