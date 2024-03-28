@@ -1,17 +1,21 @@
+
+import { createPresignedPost } from '@aws-sdk/s3-presigned-post';
+import { S3Client } from '@aws-sdk/client-s3';
+import { headers } from '../../utils/http-response.js';
+
 /**
- *　フロントエンドからS3へ動画・画像をアップロードするための署名付きURLを発行します。
+ *　@description フロントエンドからS3へ動画・画像をアップロードするための署名付きURLを発行します
  */
-
-const { createPresignedPost } = require('@aws-sdk/s3-presigned-post');
-const { S3Client } = require('@aws-sdk/client-s3');
-const { headers } = require('../../utils/http-response');
-
-exports.handler = async (event) => {
+export async function handler(event) {
   const s3Client = new S3Client();
 
   try {
     const { userId } = event.pathParameters;
     const { extension, postId } = event.queryStringParameters;
+
+    if (!userId || !postId || !extension) {
+      throw new Error('userId, postId, または extension が見つかりません');
+    }
 
     const params = determineParamsForMediaToPost({
       userId,
@@ -34,9 +38,10 @@ exports.handler = async (event) => {
 
 const determineParamsForMediaToPost = ({ userId, postId, extension }) => {
   const contentTypes = {
+    jpg: 'image/jpeg',
     jpeg: 'image/jpeg',
     mp4: 'video/mp4',
-    mp5: 'video/mp5',
+    mov: 'video/quicktime',
   };
 
   if (!Object.keys(contentTypes).includes(extension)) {
@@ -50,6 +55,6 @@ const determineParamsForMediaToPost = ({ userId, postId, extension }) => {
     Fields: {
       'Content-Type': contentType
     },
-    Expires: 600,
+    Expires: 60 * 20,
   };
 }

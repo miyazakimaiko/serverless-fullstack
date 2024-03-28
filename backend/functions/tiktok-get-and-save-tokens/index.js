@@ -1,20 +1,19 @@
+import { Client } from 'pg';
+import { SSMClient } from "@aws-sdk/client-ssm";
+import { headers } from '../../utils/http-response';
+import { clientConfig } from '../../utils/db';
+import { encryptText } from '../../utils/encryption';
+import { getEncryptionKeyFromSsm } from '../../utils/ssm';
+
+const parameterName = process.env.SSM_ENCRYPTION_KEY_PARAMETER_NAME;
+
 /**
- *　TikTokのクライアントキー、クライアントシークレット、そしてTikTokから渡された認証コードを元に
+ *　@description TikTokのクライアントキー、クライアントシークレット、そしてTikTokから渡された認証コードを元に
  * アクセストークン、リフレッシュトークン等を取得し、DBにインサートします。
  */
-
-const { Client } = require('pg');
-const { SSMClient } = require("@aws-sdk/client-ssm");
-const { headers } = require('../../utils/http-response');
-const { clientConfig } = require('../../utils/db-client');
-const { encryptText } = require('../../utils/encryption');
-const { getEncryptionKeyFromSsm } = require('../../utils/client-ssm');
-
-exports.handler = async (event) => {
+export async function handler(event) {
   const pgClient = new Client(clientConfig);
   const ssmClient = new SSMClient();
-
-  let queryStatement;
 
   try {
     const { userId, authorizationCode } = event.queryStringParameters;
@@ -31,48 +30,18 @@ exports.handler = async (event) => {
       throw new Error(tokenMetadata.error_description);
     }
 
-    const {
-      access_token: accessToken,
-      refresh_token: refreshToken
-    } = tokenMetadata;
-
     const tokenExisted = await doesTokenExist({
       pgClient,
       userId,
     });
 
-    if (tokenExisted) {
-      queryStatement = `
-        UPDATE tiktok_account 
-        SET encrypted_access_token = $2,
-            encrypted_refresh_token = $3
-        WHERE user_id = $1
-      `;
-    } else {
-      queryStatement = `
-        INSERT INTO tiktok_account 
-        (user_id, encrypted_access_token, encrypted_refresh_token)
-        VALUES ($1, $2, $3)
-      `;
-    }
-
-    const encryptionKey = await getEncryptionKeyFromSsm(ssmClient);
-
-    const encryptedAccessToken = encryptText({
-      text: accessToken,
-      key: encryptionKey,
-    });
-
-    const encryptedRefreshToken = encryptText({
-      text: refreshToken,
-      key: encryptionKey,
-    });
-
-    await pgClient.query(queryStatement, [
+    await saveTokens({
+      pgClient,
+      ssmClient,
       userId,
-      encryptedAccessToken,
-      encryptedRefreshToken,
-    ]);
+      tokenExisted,
+      tokenMetadata,
+    })
 
     return {
       statusCode: 200,
@@ -97,15 +66,18 @@ exports.handler = async (event) => {
   }
 }
 
+/**
+ * @description TikTokトークンデータをTikTokから取得
+ */
 const fetchTikTokTokens = async ({ authorizationCode, clientKey, clientSecret }) => {
   const url = 'https://open.tiktokapis.com/v2/oauth/token/';
 
   const requestBody = new URLSearchParams({
-    'client_key': clientKey,
-    'client_secret': clientSecret,
-    'code': authorizationCode,
-    'grant_type': 'authorization_code',
-    'redirect_uri': process.env.TIKTOK_REDIRECT_URI || '',
+    client_key: clientKey,
+    client_secret: clientSecret,
+    code: authorizationCode,
+    grant_type: 'authorization_code',
+    redirect_uri: process.env.TIKTOK_REDIRECT_URI || '',
   });
 
   const requestOptions = {
@@ -133,21 +105,106 @@ const fetchTikTokTokens = async ({ authorizationCode, clientKey, clientSecret })
   }
 }
 
+/**
+ * @description TikTokトークンデータがDBに存在しているかチェック
+ */
 const doesTokenExist = async ({ pgClient, userId }) => {
   try {
     const selectQuery = `
-      SELECT * FROM tiktok_account
+      SELECT COUNT(*)
+      FROM tiktok_account
       WHERE user_id = $1
     `;
-  
+
     const selected = await pgClient.query(selectQuery, [
       userId,
     ]);
-  
-    return selected.rows.length > 0;
+
+    return selected.rows[0].count > 0;
   } catch (error) {
     console.error('セレクトクエリ失敗', error);
     throw error;
   }
 }
 
+/**
+ * @description TikTokアクセストークンを暗号化し、DBに保存
+ */
+const saveTokens = async ({ pgClient, ssmClient, userId, tokenExisted, tokenMetadata }) => {
+  let queryStatement;
+
+  if (tokenExisted) {
+    queryStatement = `
+      UPDATE tiktok_account 
+      SET open_id = $1,
+          encrypted_access_token = $2,
+          access_expires_at = $3,
+          encrypted_refresh_token = $4,
+          refresh_expires_at = $5
+      WHERE user_id = $6
+    `;
+  } else {
+    queryStatement = `
+      INSERT INTO tiktok_account (
+        open_id,
+        encrypted_access_token,
+        access_expires_at,
+        encrypted_refresh_token,
+        refresh_expires_at,
+        user_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6)
+    `;
+  }
+
+  try {
+    const {
+      open_id: openId,
+      access_token: accessToken,
+      expires_in: expiresIn,
+      refresh_token: refreshToken,
+      refresh_expires_in: refreshExpiresIn,
+    } = tokenMetadata;
+  
+    const encryptionKey = await getEncryptionKeyFromSsm({ ssmClient, parameterName });
+  
+    const encryptedAccessToken = encryptText({
+      text: accessToken,
+      key: encryptionKey,
+    });
+  
+    const encryptedRefreshToken = encryptText({
+      text: refreshToken,
+      key: encryptionKey,
+    });
+  
+    const accessTokenExpiresIn = calculateExpirationDatetime(expiresIn);
+    const refreshTokenExpiresIn = calculateExpirationDatetime(refreshExpiresIn);
+  
+    await pgClient.query(queryStatement, [
+      openId,
+      encryptedAccessToken,
+      accessTokenExpiresIn,
+      encryptedRefreshToken,
+      refreshTokenExpiresIn,
+      userId,
+    ]);
+  } catch (error) {
+    console.error('トークン保存失敗', error);
+    throw error;
+  }
+}
+
+/**
+ * @description expiresInSeconds を日付に変換
+ */
+function calculateExpirationDatetime(expiresInSeconds) {
+  const currentTime = Date.now();
+
+  const expiresInSecondsWithBuffer = expiresInSeconds - (60 * 15);
+  const expiresInMilliseconds = expiresInSecondsWithBuffer * 1000;
+
+  const expirationTimestamp = currentTime + expiresInMilliseconds;
+
+  return new Date(expirationTimestamp);
+}

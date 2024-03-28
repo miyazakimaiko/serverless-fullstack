@@ -6,29 +6,29 @@
  * 参照2: https://github.com/CloudUnder/lambda-edge-nice-urls
  */
 
-const config = {
-  suffix: '/index.html',
-  appendToDirs: 'index.html',
+const indexRoutes = {
+  withSlash: '/index.html',
+  withoutSlash: 'index.html',
 }
 
 const regexSuffixless = /\/[^/.]+$/ // e.g. "/some/page" but not "/", "/some/" or "/some.jpg"
 const regexTrailingSlash = /.+\/$/ // e.g. "/some/" or "/some/page/" but not root "/"
 
-exports.handler = function handler (event, context, callback) {
-  const { request } = event.Records[0].cf
-  const { uri } = request
-  const { suffix, appendToDirs } = config
+exports.handler = function handler (event, _, callback) {
+  const { request } = event.Records[0].cf;
+  const { uri } = request;
+  const containsTikTokRedirect = /tiktok-redirect/i.test(uri);
 
-  if (suffix && uri.match(regexSuffixless)) {
-    request.uri = uri + suffix
-    callback(null, request)
-    return
+  if (containsTikTokRedirect && uri.match(regexSuffixless)) {
+    request.uri = uri + indexRoutes.withSlash;
+    callback(null, request);
+    return;
   }
 
-  if (appendToDirs && uri.match(regexTrailingSlash)) {
-    request.uri = uri + appendToDirs
+  if (containsTikTokRedirect && uri.match(regexTrailingSlash)) {
+    request.uri = uri + indexRoutes.withoutSlash
     callback(null, request)
-    return
+    return;
   }
 
   callback(null, request)

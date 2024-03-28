@@ -1,15 +1,17 @@
+
+import { Client } from 'pg';
+import { SSMClient } from '@aws-sdk/client-ssm';
+import { headers } from '../../utils/http-response.js';
+import { clientConfig } from '../../utils/db.js';
+import { encryptText } from '../../utils/encryption.js';
+import { getEncryptionKeyFromSsm } from '../../utils/ssm.js';
+
+const parameterName = process.env.SSM_ENCRYPTION_KEY_PARAMETER_NAME;
+
 /**
- *　ユーザーのInstagram長期アクセストークンとアカウントIDをDBにインサートします。
+ *　@description ユーザーのInstagram長期アクセストークンとアカウントIDをDBにインサートします
  */
-
-const { Client } = require('pg');
-const { SSMClient } = require("@aws-sdk/client-ssm");
-const { headers } = require('../../utils/http-response');
-const { clientConfig } = require('../../utils/db-client');
-const { encryptText } = require('../../utils/encryption');
-const { getEncryptionKeyFromSsm } = require('../../utils/client-ssm.js');
-
-exports.handler = async (event) => {
+export async function handler(event) {
   const pgClient = new Client(clientConfig);
   const ssmClient = new SSMClient();
 
@@ -45,7 +47,7 @@ exports.handler = async (event) => {
       `;
     }
 
-    const encryptionKey = await getEncryptionKeyFromSsm(ssmClient);
+    const encryptionKey = await getEncryptionKeyFromSsm({ ssmClient, parameterName });
 
     const encryptedAccessToken = encryptText({
       text: body.accessToken,

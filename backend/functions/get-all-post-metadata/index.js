@@ -1,12 +1,12 @@
+
+import { Client } from 'pg';
+import { headers } from '../../utils/http-response.js';
+import { clientConfig } from '../../utils/db.js';
+
 /**
- *　データベースから、指定のユーザーが保持する全投稿のメタデータを取得します。
+ *　@description データベースから、指定のユーザーが保持する全投稿のメタデータを取得します
  */
-
-const { Client } = require('pg');
-const { headers } = require('../../utils/http-response');
-const { clientConfig } = require('../../utils/db-client');
-
-exports.handler = async (event) => {
+export async function handler(event) {
   const pgClient = new Client(clientConfig);
 
   try {
@@ -55,7 +55,7 @@ exports.handler = async (event) => {
   } finally {
     await pgClient.end();
   }
-};
+}
 
 const getLatestPostIndex = (posts) => {
   let index = 0;

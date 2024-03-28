@@ -1,14 +1,14 @@
-/**
- * ユーザーの投稿メタデータをDBにインサートします。
- * 投稿の登録は最大で MAX_POST_COUNT 件までです。
- */
 
 const { Client } = require('pg');
 const { headers } = require('../../utils/http-response.js');
-const { clientConfig } = require('../../utils/db-client.js');
+const { clientConfig } = require('../../utils/db.js');
 
 const MAX_POST_COUNT = 20;
 
+/**
+ * @description ユーザーの投稿メタデータをDBにインサートします。
+ * 投稿の登録は最大で MAX_POST_COUNT 件までです。
+ */
 exports.handler = async (event) => {
   const pgClient = new Client(clientConfig);
 
@@ -31,7 +31,7 @@ exports.handler = async (event) => {
       pgClient, 
       userId,
       caption,
-      extension,
+      extension: extension.toLowerCase(),
     });
 
     return {

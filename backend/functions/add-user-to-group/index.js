@@ -2,12 +2,12 @@
  * ユーザーをUserグループに加えます。
  */
 
-const cognito = require('@aws-sdk/client-cognito-identity-provider');
-const { headers } = require('../../utils/http-response');
+import * as cognito from '@aws-sdk/client-cognito-identity-provider';
+import { headers } from '../../utils/http-response.js';
 
 const cognitoClient = new cognito.CognitoIdentityProviderClient();
 
-exports.handler = async (event) => {
+export async function handler(event) {
   try {
     const { email, isAdmin } = JSON.parse(event.body);
 
@@ -45,7 +45,7 @@ exports.handler = async (event) => {
       }),
     };
   }
-};
+}
 
 const addUserToGroup = ({ userPoolId, email, group = 'User' }) => {
   try {

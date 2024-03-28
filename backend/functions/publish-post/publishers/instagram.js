@@ -1,12 +1,17 @@
+
+import { MEDIA_EXTENSIONS, STATUS } from '../utils/enums.js';
+
+const facebookApiUrl = 'https://graph.facebook.com/v19.0';
+
 /**
- * https://graph.facebook.com/v19.0 を使用しインスタへ投稿します。
+ * @descirtion https://graph.facebook.com/v19.0 を使用しインスタへ投稿
  */
-export const main = async ({ userId, postToPublish, tokens }) => {
+export const instaPublisher = async ({ userId, postToPublish, tokens }) => {
   try {
     if (!tokens) {
       console.log(`インスタアカウントが登録されていません。インスタ投稿をスキップします | userId ${userId}`);
       return { 
-        status: 'skipped',
+        status: STATUS.SKIPPED,
         userId,
       }
     }
@@ -21,26 +26,28 @@ export const main = async ({ userId, postToPublish, tokens }) => {
     if (publishRes.id) {
       console.log(`インスタ投稿成功 | userId ${userId}`);
       return { 
-        status: 'completed',
+        status: STATUS.COMPLETED,
       }
     } else {
       return { 
-        status: 'failed',
+        status: STATUS.FAILED,
         error: publishRes,
       }
     }
   } catch (error) {
     return { 
-      status: 'failed',
+      status: STATUS.FAILED,
       error,
     }
   }
 }
 
+/**
+ * @description インスタへの投稿の公開リクエストを送り、申請が通り次第投稿
+ */
 const publishPostToInstagram = async ({ userId, accountId, accessToken, postMetadata }) => {
   const mediaBucketName = process.env.MEDIA_BUCKET_NAME;
-  const baseUrl = 'https://graph.facebook.com/v19.0';
-  const accountBaseUrl = `${baseUrl}/${accountId}`;
+  const accountBaseUrl = `${facebookApiUrl}/${accountId}`;
 
   try {
     const { caption, extension, id: postId } = postMetadata;
@@ -60,21 +67,27 @@ const publishPostToInstagram = async ({ userId, accountId, accessToken, postMeta
     });
 
     let readyToPublish;
+    let statusQueryResponse;
 
     while (!readyToPublish) {
-      const statusQueryRes = await sendMediaStatusCheckRequest({
-        baseUrl,
+      statusQueryResponse = await sendMediaStatusCheckRequest({
+        baseUrl: facebookApiUrl,
         containerId: mediaQueryRes.id,
         accessToken
-      })
+      });
   
       // 動画を投稿する際は、sendMediaRequest を送った後投稿ができるようになるまで時間がかかるので
       // ここでチェックをしながら待ちます。準備ができたら sendMediaPublishRequest を送ります
-      if (statusQueryRes.status_code !== 'IN_PROGRESS') {
+      if (statusQueryResponse.status_code !== 'IN_PROGRESS') {
         readyToPublish = true;
       } else {
         await new Promise(resolve => setTimeout(resolve, 30000));
       }
+    }
+
+    if (statusQueryResponse.status_code !== 'FINISHED') {
+      console.error('インスタ投稿失敗', statusQueryResponse);
+      throw new Error('インスタ投稿エラー');
     }
   
     return await sendMediaPublishRequest({
@@ -88,27 +101,36 @@ const publishPostToInstagram = async ({ userId, accountId, accessToken, postMeta
   }
 }
 
+/**
+ * @description メディアタイプを決定
+ */
 const determineMediaType = (extension) => {
-  if (extension === 'mp3' || extension === 'mp4') {
+  if (Object.values(MEDIA_EXTENSIONS.VIDEO).includes(extension)) {
     return 'REELS';
   } else {
     return '';
   }
 }
 
+/**
+ * @description 動画か画像かで変わるURLパラメータを決定
+ */
 const determineUrlParamKey = (extension) => {
-  if (extension === 'mp3' || extension === 'mp4') {
+  if (Object.values(MEDIA_EXTENSIONS.VIDEO).includes(extension)) {
     return 'video_url';
   } else {
     return 'image_url';
   }
 }
 
+/**
+ * @description 投稿の公開リクエストを申請
+ */
 const sendMediaRequest = async ({ baseUrl, caption, mediaType, mediaQueryUrl, urlParamKey, accessToken, }) => {
   try {
     const queryParams = new URLSearchParams({
       [urlParamKey]: mediaQueryUrl,
-      media_type: mediaType, //画像だけの投稿なら空、動画だけの投稿なら値をREELS、ストーリーなら値をSTORIESにする
+      media_type: mediaType,
       caption,
     });
 
@@ -126,6 +148,9 @@ const sendMediaRequest = async ({ baseUrl, caption, mediaType, mediaQueryUrl, ur
   }
 }
 
+/**
+ * @description 投稿公開リクエスト申請のステータスチェック
+ */
 const sendMediaStatusCheckRequest = async ({ baseUrl, containerId, accessToken }) => {
   try {  
     const statusRes = await fetch(`${baseUrl}/${containerId}?fields=status_code`, {
@@ -142,6 +167,9 @@ const sendMediaStatusCheckRequest = async ({ baseUrl, containerId, accessToken }
   }
 }
 
+/**
+ * @description 申請の通った投稿を公開
+ */
 const sendMediaPublishRequest = async ({ baseUrl, creationId, accessToken }) => {
   try {
     const publishQueryParams = new URLSearchParams({

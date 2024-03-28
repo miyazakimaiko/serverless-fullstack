@@ -1,18 +1,18 @@
+
+import { Client } from 'pg';
+import { clientConfig } from '../../utils/db.js';
+
 /**
- * このヘルパー関数は指定されたデータベース内にテーブルを作成するためのものです。
- * 直接AWSコンソールから呼び出して使えます。
+ * @description このヘルパー関数は指定されたデータベース内にテーブルを作成するためのものです
+ * 直接AWSコンソールから呼び出して使えます
  */
-
-const { Client } = require('pg');
-const { clientConfig } = require('../../utils/db-client');
-
-exports.handler = async () => {
+export async function handler() {
   const pgClient = new Client(clientConfig);
 
   try {
     await pgClient.connect();
 
-    const createTableQuery = `
+    const createPostTableStatement = `
       CREATE TABLE IF NOT EXISTS post (
         id BIGSERIAL PRIMARY KEY,
         user_id VARCHAR(255) NOT NULL,
@@ -23,33 +23,33 @@ exports.handler = async () => {
       );
     `;
 
-    const dropTableQuery = `
-        DROP TABLE IF EXISTS tiktok_account
-    `;
-
-    const createTikTokAccountTableQuery = `
+    const createTikTokAccountTableStatement = `
       CREATE TABLE IF NOT EXISTS tiktok_account (
         user_id VARCHAR(255) NOT NULL,
+        open_id VARCHAR(255),
         encrypted_access_token TEXT,
-        encrypted_refresh_token TEXT
+        encrypted_refresh_token TEXT,
+        access_expires_at TIMESTAMP,
+        refresh_expires_at TIMESTAMP
       );
     `;
-
-    const createInstaAccountTableQuery = `
+    
+    const createInstaAccountTableStatement = `
       CREATE TABLE IF NOT EXISTS insta_account (
         user_id VARCHAR(255) NOT NULL,
-        account_id VARCHAR(255) NOT NULL,
+        account_id VARCHAR(255) NOT NULL UNIQUE,
         encrypted_access_token TEXT NOT NULL
       );
     `;
 
-    await pgClient.query(dropTableQuery);
-    await pgClient.query(createTikTokAccountTableQuery);
-    // await pgClient.query(createInstaAccountTableQuery);
+    await pgClient.query(createPostTableStatement);
+    await pgClient.query(createTikTokAccountTableStatement);
+    await pgClient.query(createInstaAccountTableStatement);
 
     return 'テーブルが作成されました';
   } catch (error) {
-    console.error('テーブル作成失敗', error);
+    console.error(error);
+    return 'テーブル作成失敗';
   } finally {
     await pgClient.end();
   }

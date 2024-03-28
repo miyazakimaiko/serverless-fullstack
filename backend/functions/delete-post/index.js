@@ -1,15 +1,15 @@
-/**
- *　データベースとS3の両方から、投稿に関するデータを削除します。
- */
 
-const { Client } = require('pg');
-const { S3Client, ListObjectsV2Command, DeleteObjectCommand } = require('@aws-sdk/client-s3');
-const { headers } = require('../../utils/http-response');
-const { clientConfig } = require('../../utils/db-client');
+import { Client } from 'pg';
+import { S3Client, ListObjectsV2Command, DeleteObjectCommand } from '@aws-sdk/client-s3';
+import { headers } from '../../utils/http-response.js';
+import { clientConfig } from '../../utils/db.js';
 
 const mediaBucketName = process.env.MEDIA_BUCKET_NAME;
 
-exports.handler = async (event) => {
+/**
+ *　@description データベースとS3の両方から、投稿に関するデータを削除します
+ */
+export async function handler(event) {
   const pgClient = new Client(clientConfig);
 
   try {
@@ -77,7 +77,7 @@ exports.handler = async (event) => {
   } finally {
     await pgClient.end();
   }
-};
+}
 
 const getAllObjectsFromMediaBucket = async ({ client, userId, postId }) => {  
   try {

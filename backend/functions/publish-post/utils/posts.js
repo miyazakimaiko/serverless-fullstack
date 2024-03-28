@@ -1,6 +1,6 @@
 
 /**
- * 投稿の選別基準: 毎日一定時刻ににインスタとTikTokに１つ投稿
+ * @description 投稿の選別基準: 毎日一定時刻ににインスタとTikTokに１つ投稿、
  * 投稿順序はデータ登録順として、最後の投稿内容の投稿後は最初に戻る
  */
 export const getPostMetadataToPublish = async ({ pgClient, userId }) => {
@@ -33,14 +33,14 @@ export const getPostMetadataToPublish = async ({ pgClient, userId }) => {
         }
         else if (!current.last_posted_at) {
           postToPublish = current;
-          i = posts.length; // ループ強制終了
+          i = posts.length;
         }
         else if (!next) {
-          i = posts.length; // ループ強制終了
+          i = posts.length;
         }
         else if (!next.last_posted_at || (current.last_posted_at > next.last_posted_at)) {
           postToPublish = next;
-          i = posts.length; // ループ強制終了
+          i = posts.length;
         }
       }
     }
@@ -51,6 +51,9 @@ export const getPostMetadataToPublish = async ({ pgClient, userId }) => {
   }
 }
 
+/**
+ * @description 投稿した日付を last_posted_at に記録
+ */
 export const updateLastPostedTimestamp = async ({ pgClient, postId }) => {
   try {
     const updateStatement = `
