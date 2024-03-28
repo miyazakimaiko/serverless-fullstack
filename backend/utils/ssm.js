@@ -1,12 +1,15 @@
-const { GetParameterCommand } = require('@aws-sdk/client-ssm');
+import { GetParameterCommand } from '@aws-sdk/client-ssm';
 
-export const getEncryptionKeyFromSsm = async (client) => {
+/**
+ * @description 暗号化キーをSSMパラメータから取得します
+ */
+export const getEncryptionKeyFromSsm = async ({ ssmClient, parameterName }) => {
   try {
     const input = {
-      Name: process.env.SSM_ENCRYPTION_KEY_PARAMETER_NAME,
+      Name: parameterName,
     };
     const command = new GetParameterCommand(input);
-    const response = await client.send(command);
+    const response = await ssmClient.send(command);
 
     if (!response?.Parameter?.Value) {
       throw Error('Response.Parameter.Valueが見つかりません');

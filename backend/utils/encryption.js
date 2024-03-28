@@ -1,4 +1,4 @@
-const crypto = require('crypto');
+import crypto from 'crypto';
 
 const BASE64_ENCODING = 'base64';
 const UTF8_ENCODING = 'utf8';
