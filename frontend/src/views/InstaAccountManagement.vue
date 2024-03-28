@@ -47,11 +47,6 @@ export default {
     ]),
   },
   methods: {
-    clearMessages() {
-      this.errorSave = null;
-      this.saveSuccess = null;
-    },
-
     async saveAccessToken() {
       this.clearMessages();
 
@@ -78,6 +73,11 @@ export default {
         console.error('クライアントキーの登録失敗', error);
         this.errorSave = 'クライアントキーの登録に失敗しました';
       }
+    },
+
+    clearMessages() {
+      this.errorSave = null;
+      this.saveSuccess = null;
     },
   }
 };
