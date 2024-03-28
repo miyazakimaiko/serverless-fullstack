@@ -127,19 +127,19 @@ npm run deploy:dev
 
 #### /.env
 
-| 変数名                  | 役割                                       | 例                                                 | 詳細                                                 |
-| ---------------------- | ----------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
-| AWS_ACCOUNT            | AWS アカウント番号                           | 1234567890                                          | AWS アカウントの一意の識別子                         |
-| AWS_REGION             | AWS リージョン                              | eu-west-1                                           | アプリケーションをデプロイする AWS リージョン        |
-| AWS_STAGE              | AWS ステージ                                | dev, prod 等                                        | CDKが作成する全てのリソース名に、APP_NAME と共に接頭辞として使用されます   |
-| APP_NAME               | アプリ名                                    | myapp                                               | CDKが作成する全てのリソース名に、AWS_STAGE と共に接頭辞として使用されます |
-| DB_NAME                | データベース名                               | myapp                                               | デフォルトで作成されるデータベース名前               |
-| DB_USER                | マスターユーザー名                           | examplename                                         | デフォルトで作成されるデータベースのマスターユーザー名 |
-| DB_PASSWORD            | マスターパスワード                           | examplepassword                                     | デフォルトで作成されるデータベースのマスターパスワード |
-| ENCRYPTION_KEY_STRING  | データを暗号化および復号化するためのキー        | example1234567890IlJ1x1s6yH1cox7oBMAXDxWeU4=        | 標準の8ビットASCIIエンコーディングを各文字に使用する場合、32文字(256-bit) のランダムな文字列を使用してください |
-| TIKTOK_CLIENT_KEY      | TikTok クライアントキー                     | exampleclientkey                                    | TikTok API へのアクセスに使用されるクライアントキー |
-| TIKTOK_CLIENT_SECRET   | TikTok クライアントシークレット               | exampleclientsecret                                 | TikTok API へのアクセスに使用されるクライアントシークレット |
-| TIKTOK_CLIENT_AUDITED  | TikTok クライアント監査済みフラグ             | false                                               | 未監査クライアントからアップロードされたすべてのコンテンツはプライベート表示モードに制限されます。監査を受け、通った後以下の環境変数を true にすると、TikTokへ一般公開モードで投稿します。参照: https://developers.tiktok.com/doc/content-sharing-guidelines/  |
+| 変数名                  | 例                                                 | 役割                                                 |
+| ---------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| AWS_ACCOUNT            | 1234567890                                          | AWS アカウントの一意の識別子                         |
+| AWS_REGION             | eu-west-1                                           | アプリケーションをデプロイする AWS リージョン        |
+| AWS_STAGE              | dev, prod 等                                        | CDKが作成する全てのリソース名に、APP_NAME と共に接頭辞として使用されます   |
+| APP_NAME               | myapp                                               | CDKが作成する全てのリソース名に、AWS_STAGE と共に接頭辞として使用されます |
+| DB_NAME                | myapp                                               | デフォルトで作成されるデータベース名前               |
+| DB_USER                | examplename                                         | デフォルトで作成されるデータベースのマスターユーザー名 |
+| DB_PASSWORD            | examplepassword                                     | デフォルトで作成されるデータベースのマスターパスワード |
+| ENCRYPTION_KEY_STRING  | example1234567890IlJ1x1s6yH1cox7oBMAXDxWeU4=        | 標準の8ビットASCIIエンコーディングを各文字に使用する場合、32文字(256-bit) のランダムな文字列を使用してください |
+| TIKTOK_CLIENT_KEY      | exampleclientkey                                    | TikTok API へのアクセスに使用されるクライアントキー |
+| TIKTOK_CLIENT_SECRET   | exampleclientsecret                                 | TikTok API へのアクセスに使用されるクライアントシークレット |
+| TIKTOK_CLIENT_AUDITED  | false                                               | 未監査クライアントからアップロードされたすべてのコンテンツはプライベート表示モードに制限されます。監査を受け、通った後以下の環境変数を true にすると、TikTokへ一般公開モードで投稿します。参照: https://developers.tiktok.com/doc/content-sharing-guidelines/  |
 
 
 
@@ -147,13 +147,14 @@ npm run deploy:dev
 
 フロントエンドの 環境変数は　`npm run deploy:dev` コマンド完了時に Output として自動的に生成されます。
 
-| 変数名                     | 役割                                       | 例                                                 | 詳細                                                |
-| ------------------------- | ----------------------------------------- | --------------------------------------------------- | -------------------------------------------------- |
-| VUE_APP_COGNITO_USER_POOL_ID | Cognito ユーザープール ID                  | eu-west-1_example                                | Cognito ユーザープールの一意の識別子             |
-| VUE_APP_COGNITO_CLIENT_ID | Cognito クライアント ID                     | example0nph083mfapian496                            | Cognito クライアントの一意の識別子                |
-| VUE_APP_API_ENDPOINT      | API エンドポイント                           | https://example.execute-api.eu-west-1.amazonaws.com/prod/api | アプリケーションのバックエンド API のエンドポイント |
-| VUE_APP_MEDIA_BUCKET_URL  | メディアバケット URL                         | https://example-media-bucket.s3.eu-west-1.amazonaws.com | アプリケーションで使用するメディアバケットの URL    |
-| VUE_APP_SITE_URL          | サイト URL                                  | https://example.cloudfront.net               | アプリケーションのホストされているサイトの URL     |
-| VUE_APP_TIKTOK_CLIENT_KEY | TikTok クライアントキー                      | example68gdcwy0x                                    | TikTok API へのアクセスに使用されるクライアントキー |
+| 変数名                     | 例                                                 | 役割                                                | 詳細                                                 |
+| ------------------------- | --------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| VUE_APP_COGNITO_USER_POOL_ID | eu-west-1_example                                | Cognito ユーザープールの一意の識別子             | Cognito ユーザープール ID                          |
+| VUE_APP_COGNITO_CLIENT_ID | example0nph083mfapian496                            | Cognito クライアントの一意の識別子                | Cognito クライアント ID                           |
+| VUE_APP_API_ENDPOINT      | https://example.execute-api.eu-west-1.amazonaws.com/prod/api | アプリケーションのバックエンド API のエンドポイント | API エンドポイント                                |
+| VUE_APP_MEDIA_BUCKET_URL  | https://example-media-bucket.s3.eu-west-1.amazonaws.com | アプリケーションで使用するメディアバケットの URL    | メディアバケット URL                               |
+| VUE_APP_SITE_URL          | https://example.cloudfront.net               | アプリケーションのホストされているサイトの URL     | サイト URL                                        |
+| VUE_APP_TIKTOK_CLIENT_KEY | example68gdcwy0x                                    | TikTok API へのアクセスに使用されるクライアントキー | TikTok クライアントキー                          |
+
 
 <p align="right">(<a href="#top">トップへ</a>)</p>
