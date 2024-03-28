@@ -12,7 +12,7 @@ const id = `${stage}-${process.env.APP_NAME}`.toLowerCase();
 
 new MainStack(app, id, {
   env: { 
-    account: process.env.CDK_DEFAULT_ACCOUNT, 
-    region: process.env.CDK_DEFAULT_REGION
+    account: process.env.AWS_ACCOUNT, 
+    region: process.env.AWS_REGION
   },
 });
