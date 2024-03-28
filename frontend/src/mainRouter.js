@@ -99,16 +99,6 @@ const router = createRouter({
       }
     },
     {
-      path: '/tiktok/redirect',
-      component: TikTokRedirect,
-      meta: {
-        requiresAuth: true, 
-      },
-      beforeEnter: (to, from, next) => {
-        redirectTo404IfNotuserRoles(next)
-      }
-    },
-    {
       path: '/insta/account',
       component: InstaAccountManagement,
       meta: {
