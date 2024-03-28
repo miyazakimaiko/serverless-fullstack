@@ -147,14 +147,14 @@ npm run deploy:dev
 
 フロントエンドの 環境変数は　`npm run deploy:dev` コマンド完了時に Output として自動的に生成されます。
 
-| 変数名                     | 例                                                 | 役割                                                | 詳細                                                 |
-| ------------------------- | --------------------------------------------------- | --------------------------------------------------- | --------------------------------------------------- |
-| VUE_APP_COGNITO_USER_POOL_ID | eu-west-1_example                                | Cognito ユーザープールの一意の識別子             | Cognito ユーザープール ID                          |
-| VUE_APP_COGNITO_CLIENT_ID | example0nph083mfapian496                            | Cognito クライアントの一意の識別子                | Cognito クライアント ID                           |
-| VUE_APP_API_ENDPOINT      | https://example.execute-api.eu-west-1.amazonaws.com/prod/api | アプリケーションのバックエンド API のエンドポイント | API エンドポイント                                |
-| VUE_APP_MEDIA_BUCKET_URL  | https://example-media-bucket.s3.eu-west-1.amazonaws.com | アプリケーションで使用するメディアバケットの URL    | メディアバケット URL                               |
-| VUE_APP_SITE_URL          | https://example.cloudfront.net               | アプリケーションのホストされているサイトの URL     | サイト URL                                        |
-| VUE_APP_TIKTOK_CLIENT_KEY | example68gdcwy0x                                    | TikTok API へのアクセスに使用されるクライアントキー | TikTok クライアントキー                          |
+| 変数名                     | 例                                                 | 役割                                                |
+| ------------------------- | --------------------------------------------------- | --------------------------------------------------- |
+| VUE_APP_COGNITO_USER_POOL_ID | eu-west-1_example                                | Cognito ユーザープールの一意の識別子             |
+| VUE_APP_COGNITO_CLIENT_ID | example0nph083mfapian496                            | Cognito クライアントの一意の識別子                |
+| VUE_APP_API_ENDPOINT      | https://example.execute-api.eu-west-1.amazonaws.com/prod/api | アプリケーションのバックエンド API のエンドポイント |
+| VUE_APP_MEDIA_BUCKET_URL  | https://example-media-bucket.s3.eu-west-1.amazonaws.com | アプリケーションで使用するメディアバケットの URL    |
+| VUE_APP_SITE_URL          | https://example.cloudfront.net               | アプリケーションのホストされているサイトの URL     |
+| VUE_APP_TIKTOK_CLIENT_KEY | example68gdcwy0x                                    | TikTok API へのアクセスに使用されるクライアントキー |
 
 
 <p align="right">(<a href="#top">トップへ</a>)</p>
