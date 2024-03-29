@@ -12,17 +12,16 @@
     - <a href="#25">環境変数の一覧</a>
 
 3. <a href="#30">TikTokクライアントの設定と API利用の申請方法</a>    
-
-    <a href="#31">1. TikTok Developer アカウントを開設する</a>    
-    <a href="#32">2. App を作成する</a>    
-    <a href="#33">3. Configuration セクションの必要事項を記入する</a>    
-    <a href="#34">4. URL properties セクションの必要事項を記入する</a>    
-    <a href="#35">5. Products を追加・設定する</a>    
-    <a href="#36">6. Login Kit の必要事項を記入する</a>    
-    <a href="#37">7. Content Posting API の必要事項を設定する</a>    
-    <a href="#38">8. Scopes の必要事項を確認する</a>    
-    <a href="#39">9. API利用の申請をする</a>    
-    <a href="#310">10. TikTokログインの動作確認をする</a>    
+    - <a href="#31">1. TikTok Developer アカウントを開設する</a>    
+    - <a href="#32">2. App を作成する</a>    
+    - <a href="#33">3. Configuration セクションの必要事項を記入する</a>    
+    - <a href="#34">4. URL properties セクションの必要事項を記入する</a>    
+    - <a href="#35">5. Products を追加・設定する</a>    
+    - <a href="#36">6. Login Kit の必要事項を記入する</a>    
+    - <a href="#37">7. Content Posting API の必要事項を設定する</a>    
+    - <a href="#38">8. Scopes の必要事項を確認する</a>    
+    - <a href="#39">9. API利用の申請をする</a>    
+    - <a href="#310">10. TikTokログインの動作確認をする</a>    
   
 
 <div id="環境"></div>
