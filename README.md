@@ -281,7 +281,7 @@ App ページ のメニューから `Add Products` を選択し、前述の 3つ
 
 <div id="36"></div>
 
-#### **6. Login Kit の必要事項を記入する**
+### **6. Login Kit の必要事項を記入する**
 
 `Login Kit` の `Redirect URI` セクションから `Web` を選択し、デプロイされたサイトのTikTokリダイレクトURL `<VUE_APP_SITE_URL>/tiktok-redirect` を記入します。
 
@@ -294,7 +294,7 @@ https://example.cloudfront.net/tiktok-redirect
 
 <div id="37"></div>
 
-#### **7. Content Posting API の必要事項を設定する**
+### **7. Content Posting API の必要事項を設定する**
 
 `Content Posting API` セクションの `Direct Post` のトグルボタンをオンにします。
 
@@ -303,7 +303,7 @@ https://example.cloudfront.net/tiktok-redirect
 
 <div id="38"></div>
 
-#### **8. Scopes の必要事項を確認する**
+### **8. Scopes の必要事項を確認する**
  
 `Scopes` セクションに `user.info.basic` と `video.publish` のスコープが追加されていることを確認します。この時点では、スコープは `Submit for review` のステータスになっていることを確認します。
 
