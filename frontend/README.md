@@ -1,24 +1,23 @@
-# my-vue-app
+## プロジェクトのセットアップ
 
-## Project setup
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### コンパイルしてホットリロード（開発用）
 ```
 npm run serve
 ```
 
-### Compiles and minifies for production
+### コンパイルして本番用に最小化
 ```
 npm run build
 ```
 
-### Lints and fixes files
+### ファイルのリントと修正
 ```
 npm run lint
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
+### カスタム設定
+詳細は [Configuration Reference](https://cli.vuejs.org/config/) を参照してください。
