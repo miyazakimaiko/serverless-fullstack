@@ -1,5 +1,5 @@
 {
-  "name": "spa-sample-site",
+  "name": "serverless-fullstack",
   "version": "0.1.0",
   "bin": {
     "app": "bin/app.js"
