@@ -41,6 +41,7 @@ CDK CLI と Node.js v18 以降をお使いのマシンにインストールす�
 #### ステップ 1
 
 ターミナルで frontend ディレクトリに移動し、以下のコマンドを実行してください。
+(`npm i` コマンドで パッケージはインストールされた状態を前提としています)
 
 ```
 npm run build
@@ -77,6 +78,7 @@ TIKTOK_CLIENT_AUDITED=false
 ```
 
 .env ファイルを作成後、ルートディレクトリに移動し、以下のコマンドで開発環境をデプロイします。
+（`npm i` コマンドでパッケージはインストールされた状態を前提としています）
 
 ```
 npm run deploy:dev
@@ -103,7 +105,7 @@ VUE_APP_TIKTOK_CLIENT_KEY=exampleClientKey2384
 
 ![コマンドアウトプット例](readme-asset/output-example.png);
 
-frontend/.env ファイルを作成後、frontend ディレクトリから以下のコマンドでフロントエンドをビルドします。
+frontend/.env ファイルを作成後、frontend ディレクトリに移動し、以下のコマンドでフロントエンドをビルドします。
 
 ```
 npm run build
