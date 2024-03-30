@@ -1,6 +1,7 @@
 {
   "name": "serverless-fullstack",
   "version": "0.1.0",
+  "type": "module",
   "bin": {
     "app": "bin/app.js"
   },
@@ -8,6 +9,7 @@
     "build": "echo \"The build step is not required when using JavaScript!\" && exit 0",
     "cdk": "cdk",
     "deploy:dev": "cdk deploy --all --profile default",
+    "bootstrap": "cdk bootstrap --profile default", 
     "test": "jest"
   },
   "devDependencies": {
