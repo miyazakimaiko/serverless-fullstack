@@ -133,7 +133,7 @@ npm run deploy:dev
 ```shell
 VUE_APP_COGNITO_USER_POOL_ID=eu-west-1_123example  
 VUE_APP_COGNITO_CLIENT_ID=example23rui3asldjfblasie  
-VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/  
+VUE_APP_API_ENDPOINT=https://example.execute-api.eu-west-1.amazonaws.com/prod/api 
 VUE_APP_MEDIA_BUCKET_URL=https://example-media-bucket.s3.eu-west-1.amazonaws.com  
 VUE_APP_SITE_URL=https://example.cloudfront.net  
 VUE_APP_TIKTOK_CLIENT_KEY=exampleClientKey2384
