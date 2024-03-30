@@ -311,7 +311,6 @@ export default {
 
     async getPresignedUrl({ userId, postId, extension }) {
       try {
-        throw new Error('some error')
         const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/presigned-url`;
         const queryParams = new URLSearchParams({
           postId,
