@@ -4,5 +4,4 @@ node_modules
 .cdk.staging
 cdk.out
 .env
-.readme-asset/*
-.README.md
+cdk.context.json
