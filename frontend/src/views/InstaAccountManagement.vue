@@ -8,6 +8,13 @@
       {{ saveSuccess }}
     </div>
 
+    <form @submit.prevent="handleFacebookAuth" class="needs-validation mb-4">
+      <p>以下のボタンをクリックするとFacebookで認証が行われ、アプリからの自動投稿を可能にします。</p>
+      <button type="submit" class="btn btn-primary" :disabled="signingIn">
+        Facebook ログイン
+      </button>
+    </form>
+
     <form @submit.prevent="saveAccessToken" class="needs-validation mb-4">
       <div class="mb-3">
         <label for="accountId" class="form-label">アカウントID</label>
@@ -33,6 +40,8 @@ export default {
       mediaBucketUrl: process.env.VUE_APP_MEDIA_BUCKET_URL,
       siteUrl: process.env.VUE_APP_SITE_URL,
 
+      fbUserData: null,
+
       accountId: null,
       accessToken: null,
 
@@ -47,6 +56,66 @@ export default {
     ]),
   },
   methods: {
+    async handleFacebookAuth() {
+      const scopeArray = [
+        'public_profile',
+        'email',
+        'publish_video',
+        'pages_show_list',
+        'business_management',
+        'instagram_basic',
+        'instagram_manage_insights',
+        'instagram_content_publish'
+      ];
+      try {
+        await FB.login(this.loginCallback, {
+          scope: scopeArray.join(','),
+        });
+      } catch (error) {
+        console.error('error', error);
+      }
+    },
+
+    async loginCallback(response) {
+      console.log({ loginRes: response })
+
+      if (!response?.authResponse || response?.status !== 'connected') {
+        console.log('ログイン中断または認証に失敗');
+        return;
+      }
+
+      this.fbUserData = response.authResponse;
+
+      const { accessToken, userID } = response.authResponse;
+
+      console.log({ accessToken })
+
+      const longLivedTokenRes = await this.getLongLivedUserAccessToken({
+        fbUserId: userID,
+        shortLivedUserToken: accessToken
+      });
+    },
+
+    async getLongLivedUserAccessToken({ fbUserId, shortLivedUserToken }) {
+      try {
+        const userId = this.sessionUser?.idToken?.payload?.sub;
+        const url = `${process.env.VUE_APP_API_ENDPOINT}/user/${userId}/account/insta/long-lived-user-token`;
+        const queryParams = new URLSearchParams({
+          fbUserId,
+          accessToken: shortLivedUserToken,
+        });
+        const saveTokenRes = await fetch(`${url}?${queryParams}`, {
+          method: 'GET',
+        });
+        const saveTokenJsonRes = await saveTokenRes.json();
+
+        console.log({ saveTokenJsonRes })
+        return saveTokenJsonRes;
+      } catch (error) {
+        console.error('長期ユーザーアクセストークン取得失敗', error);
+      }
+    },
+
     async saveAccessToken() {
       this.clearMessages();
 
